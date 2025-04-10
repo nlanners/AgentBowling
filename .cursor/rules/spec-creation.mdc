@@ -1,0 +1,27 @@
+---
+description: 
+globs: *.spec.md
+alwaysApply: false
+---
+# Specification Creation Rule
+
+## Description
+
+This rule governs the process of creating specification files (`.spec.md`) for the bowling score app project. During this phase, no code should be written until explicitly directed by the user.
+
+## Scope
+
+- Applies to any prompts concerning writing `.spec.md` files
+- Applies to all specification development phases
+
+## Instructions
+
+1. Specification files must be written in Markdown format.
+2. NO code or code snippets should be written while working on specification files.
+3. Focus on documenting requirements, features, user stories, and technical design.
+4. Wait for explicit instructions from the user before implementing any code from the specifications.
+5. Specification files should be clear, detailed, and organized to serve as proper documentation.
+
+## Priority
+
+High - these instructions take precedence during the specification phase and should be followed strictly until explicitly directed otherwise by the user. 
