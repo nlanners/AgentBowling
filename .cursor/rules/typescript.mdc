@@ -1,0 +1,294 @@
+---
+description: 
+globs: *.ts,*.tsx
+alwaysApply: false
+---
+# TypeScript Best Practices Rule
+
+## Description
+
+This rule outlines the latest (2025) best practices and coding standards for TypeScript development in our bowling score app. Following these guidelines will ensure code consistency, type safety, and maintainability.
+
+## Scope
+
+- Applies to all `.ts` and `.tsx` files
+- Priority: High (must be followed for all TypeScript code)
+
+## TypeScript Version
+
+- Use TypeScript 5.3+ features where appropriate
+
+## Type Definitions
+
+1. **Prefer interfaces over types** for object shapes that will be implemented or extended:
+   ```typescript
+   // Preferred
+   interface Player {
+     id: string;
+     name: string;
+     score: number;
+   }
+
+   // Avoid for object shapes that will be implemented
+   type Player = {
+     id: string;
+     name: string;
+     score: number;
+   };
+   ```
+
+2. **Use type aliases** for unions, intersections, and complex types:
+   ```typescript
+   type Result = 'strike' | 'spare' | 'open';
+   type FrameNumber = 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10;
+   ```
+
+3. **Use explicit generic type parameters** rather than relying on inference when the intent needs to be clear:
+   ```typescript
+   // Explicit is clearer in complex scenarios
+   const scores = new Map<string, number>();
+   ```
+
+4. **Always define return types** for functions and methods:
+   ```typescript
+   function calculateScore(pins: number[]): number {
+     // Implementation
+   }
+   ```
+
+5. **Use function type signatures** with named parameters for better documentation:
+   ```typescript
+   type ScoreCalculator = (rolls: number[], frameIndex: number) => number;
+   ```
+
+6. **Use readonly modifiers** for immutable properties:
+   ```typescript
+   interface Frame {
+     readonly index: number;
+     rolls: number[];
+   }
+   ```
+
+7. **Use nullish coalescing and optional chaining** for cleaner code:
+   ```typescript
+   const playerName = player?.name ?? 'Guest';
+   ```
+
+8. **Define enums for fixed sets** of related values:
+   ```typescript
+   enum GameState {
+     Setup,
+     InProgress,
+     Completed,
+   }
+   ```
+
+## Naming Conventions
+
+1. **Use PascalCase** for:
+   - Classes
+   - Interfaces
+   - Types
+   - Enums
+
+2. **Use camelCase** for:
+   - Variables
+   - Functions
+   - Methods
+   - Properties
+
+3. **Use ALL_CAPS** for:
+   - Constants
+   - Environment variables
+
+4. **Prefix interfaces** that describe React component props with the component name:
+   ```typescript
+   interface ScoreboardProps {
+     frames: Frame[];
+     currentPlayer: Player;
+   }
+   ```
+
+5. **Prefix private class members** with an underscore:
+   ```typescript
+   class Game {
+     private _frames: Frame[] = [];
+   }
+   ```
+
+## Code Organization
+
+1. **Group imports** in the following order:
+   - Built-in Node.js modules
+   - Third-party modules
+   - Local modules
+   - CSS/SCSS imports
+   - Types and interfaces
+
+2. **Organize class members** in the following order:
+   - Properties
+   - Constructor
+   - Public methods
+   - Private methods
+   - Static methods
+
+3. **Co-locate related functionality** in the same file or directory
+
+4. **Keep files focused** on a single responsibility
+
+## React-Specific Guidelines
+
+1. **Use function components with hooks** over class components:
+   ```typescript
+   const ScoreDisplay: React.FC<ScoreDisplayProps> = ({ score }) => {
+     return <Text>{score}</Text>;
+   };
+   ```
+
+2. **Use custom hooks** to share stateful logic between components:
+   ```typescript
+   function useGameState(): [GameState, (state: GameState) => void] {
+     // Implementation
+   }
+   ```
+
+3. **Use TypeScript's discriminated unions** for reducers:
+   ```typescript
+   type Action = 
+     | { type: 'ADD_ROLL'; payload: number }
+     | { type: 'RESET_GAME' }
+     | { type: 'CHANGE_PLAYER'; payload: string };
+   ```
+
+4. **Use the children prop type** correctly:
+   ```typescript
+   interface LayoutProps {
+     children: React.ReactNode;
+   }
+   ```
+
+## Type Safety Practices
+
+1. **Avoid using `any`** - use `unknown` instead when type is truly unknown:
+   ```typescript
+   // Avoid
+   function parseData(data: any) { }
+
+   // Prefer
+   function parseData(data: unknown) { }
+   ```
+
+2. **Explicitly define API contracts** with types or interfaces
+
+3. **Use type narrowing** with type guards:
+   ```typescript
+   function isStrike(frame: Frame): frame is StrikeFrame {
+     return frame.rolls[0] === 10;
+   }
+   ```
+
+4. **Use assertive functions** to guarantee types:
+   ```typescript
+   function assertIsPlayer(player: unknown): asserts player is Player {
+     if (!player || typeof player !== 'object') throw new Error('Not a player');
+     // Additional checks
+   }
+   ```
+
+5. **Use template literal types** for string manipulation:
+   ```typescript
+   type PlayerId = `player-${number}`;
+   ```
+
+6. **Use the `satisfies` operator** to validate object literals:
+   ```typescript
+   const INITIAL_STATE = {
+     game: null,
+     players: [],
+     currentPlayer: 0,
+   } satisfies GameContextState;
+   ```
+
+## Performance Considerations
+
+1. **Use `const` assertions** for literal values:
+   ```typescript
+   const FRAMES = 10 as const;
+   ```
+
+2. **Leverage TypeScript's control flow analysis** for automatic type narrowing
+
+3. **Use mapped and conditional types** for advanced type transformations
+
+4. **Consider using `readonly` arrays** for immutable data:
+   ```typescript
+   function calculateTotal(scores: readonly number[]): number {
+     // Implementation
+   }
+   ```
+
+## Documentation
+
+1. **Use JSDoc comments** for public APIs and complex functions:
+   ```typescript
+   /**
+    * Calculates the score for a specific frame
+    * @param rolls - All rolls in the game
+    * @param frameIndex - The index of the frame to calculate
+    * @returns The score for the specified frame
+    */
+   function calculateFrameScore(rolls: number[], frameIndex: number): number {
+     // Implementation
+   }
+   ```
+
+2. **Document complex types** with comments
+
+## Error Handling
+
+1. **Use custom error types** for specific error cases:
+   ```typescript
+   class ValidationError extends Error {
+     constructor(message: string) {
+       super(message);
+       this.name = 'ValidationError';
+     }
+   }
+   ```
+
+2. **Return typed results** for operations that may fail:
+   ```typescript
+   type Result<T> = { success: true; data: T } | { success: false; error: Error };
+   ```
+
+## State Management
+
+1. **Use immutable state updates** in reducers and state setters:
+   ```typescript
+   const nextState = {
+     ...state,
+     score: state.score + points,
+   };
+   ```
+
+2. **Define strict state types** for context providers and reducers
+
+## Testing
+
+1. **Write typed test fixtures**:
+   ```typescript
+   const testPlayer: Player = {
+     id: '1',
+     name: 'Test Player',
+     score: 0,
+   };
+   ```
+
+2. **Leverage TypeScript for mocking**:
+   ```typescript
+   type MockGameService = jest.Mocked<GameService>;
+   ```
+
+## Priority
+
+This rule has HIGH priority and should be strictly followed for all TypeScript code in the project. 

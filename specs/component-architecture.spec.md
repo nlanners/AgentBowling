@@ -10,21 +10,21 @@ The application will follow a feature-based organization of components with clea
 
 ```
 /src
-  /components          # Shared, reusable components
+  /components          # All components
     /ui                # Generic UI components
     /layout            # Layout components
     /forms             # Form-related components
-  /features            # Feature-specific components
     /game              # Game-related components
     /players           # Player management components
     /history           # History and statistics components
+    /scoreboard        # Scoreboard-specific components
   /screens             # Screen-level components
   /navigation          # Navigation components
   /hooks               # Custom React hooks
   /contexts            # Context providers
   /utils               # Utility functions
   /types               # TypeScript type definitions
-  /constants           # Application constants
+    /constants         # Application constants
   /services            # Services for external interactions
 ```
 

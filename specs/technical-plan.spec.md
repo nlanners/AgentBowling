@@ -11,7 +11,7 @@ The application will be built using the following technologies:
 - **Framework**: React Native with Expo
 - **Language**: TypeScript
 - **State Management**: React Context API with Hooks
-- **Storage**: AsyncStorage
+- **Storage**: MMKV Storage
 - **Navigation**: React Navigation
 - **Testing**: Jest and React Native Testing Library
 
@@ -21,95 +21,85 @@ The development will be organized into the following phases:
 
 ### Phase 1: Project Setup and Core Architecture
 
-**Estimated Duration**: 1 week
-
 **Tasks**:
 
-1. Initialize Expo project with TypeScript
-2. Set up project structure following component architecture spec
-3. Implement core theme and styling system
-4. Set up navigation structure
-5. Create TypeScript interfaces for data models
-6. Implement persistence service with AsyncStorage
+- [x] Initialize Expo project with TypeScript
+- [x] Set up project structure following component architecture spec
+- [x] Implement core theme and styling system
+- [ ] Set up navigation structure
+- [ ] Create TypeScript interfaces for data models
+- [ ] Implement persistence service with MMKV Storage
 
 **Deliverables**:
 
-- Basic project scaffold
-- TypeScript configuration
-- Navigation system
-- Theme and style system
-- Storage service infrastructure
+- [x] Basic project scaffold
+- [x] TypeScript configuration
+- [ ] Navigation system
+- [x] Theme and style system
+- [ ] Storage service infrastructure
 
 ### Phase 2: Core Game Logic Implementation
 
-**Estimated Duration**: 2 weeks
-
 **Tasks**:
 
-1. Implement bowling score calculation logic
-2. Create game state management using context
-3. Develop frame and scoring utilities
-4. Implement validation for bowling rules
-5. Create unit tests for scoring logic
+- [ ] Implement bowling score calculation logic
+- [ ] Create game state management using context
+- [ ] Develop frame and scoring utilities
+- [ ] Implement validation for bowling rules
+- [ ] Create unit tests for scoring logic
 
 **Deliverables**:
 
-- Bowling game model implementation
-- Scoring logic with tests
-- Game state management
+- [ ] Bowling game model implementation
+- [ ] Scoring logic with tests
+- [ ] Game state management
 
 ### Phase 3: UI Components and Screens
 
-**Estimated Duration**: 2 weeks
-
 **Tasks**:
 
-1. Implement base UI components
-2. Create scoreboard component
-3. Develop pin input interface
-4. Build game screen with real-time scoring
-5. Implement player management screens
-6. Create game setup and summary screens
+- [ ] Implement base UI components
+- [ ] Create scoreboard component
+- [ ] Develop pin input interface
+- [ ] Build game screen with real-time scoring
+- [ ] Implement player management screens
+- [ ] Create game setup and summary screens
 
 **Deliverables**:
 
-- Complete set of UI components
-- Functional game screens
-- Player management interface
+- [ ] Complete set of UI components
+- [ ] Functional game screens
+- [ ] Player management interface
 
 ### Phase 4: History and Statistics
 
-**Estimated Duration**: 1 week
-
 **Tasks**:
 
-1. Implement game history storage
-2. Create history viewing interface
-3. Develop basic statistics calculations
-4. Build statistics display components
+- [ ] Implement game history storage
+- [ ] Create history viewing interface
+- [ ] Develop basic statistics calculations
+- [ ] Build statistics display components
 
 **Deliverables**:
 
-- History tracking and display
-- Statistics calculation and presentation
+- [ ] History tracking and display
+- [ ] Statistics calculation and presentation
 
 ### Phase 5: Finalization and Polish
 
-**Estimated Duration**: 1 week
-
 **Tasks**:
 
-1. Implement remaining features
-2. Add error handling throughout the app
-3. Optimize performance
-4. Conduct comprehensive testing
-5. Apply final UI polish
+- [ ] Implement remaining features
+- [ ] Add error handling throughout the app
+- [ ] Optimize performance
+- [ ] Conduct comprehensive testing
+- [ ] Apply final UI polish
 
 **Deliverables**:
 
-- Complete, polished application
-- Bug-free experience
-- Optimized performance
+- [ ] Complete, polished application
+- [ ] Bug-free experience
+- [ ] Optimized performance
 
 ## Directory Structure
 
@@ -117,12 +107,11 @@ The application will follow this directory structure:
 
 ```
 /src
-  /components          # Shared, reusable components
+  /components          # All components
     /ui                # Generic UI components
     /layout            # Layout components
     /forms             # Form-related components
     /scoreboard        # Scoreboard-specific components
-  /features            # Feature-specific components
     /game              # Game-related components
     /players           # Player management components
     /history           # History and statistics components
@@ -134,7 +123,7 @@ The application will follow this directory structure:
     /scoring           # Scoring calculation utilities
     /validation        # Input validation utilities
   /types               # TypeScript type definitions
-  /constants           # Application constants
+    /constants         # Application constants
   /services            # Services for external interactions
     /storage           # Storage service implementation
   /theme               # Theme variables and utilities
