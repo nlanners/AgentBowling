@@ -40,3 +40,6 @@ yarn-error.*
 
 # prompts
 .prompts/
+
+# PR description
+pr-description.md
