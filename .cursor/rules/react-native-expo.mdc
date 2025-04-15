@@ -1,0 +1,596 @@
+---
+description: 
+globs: 
+alwaysApply: false
+---
+# React Native and Expo Best Practices Rule
+
+## Description
+
+This rule outlines the latest (2025) best practices and coding standards for React Native and Expo development in our bowling score app. Following these guidelines will ensure consistent, performant, and maintainable mobile application code.
+
+## Scope
+
+- Applies to all files using React Native and Expo patterns
+- Priority: High (must be followed for all React Native code)
+
+## Component Architecture
+
+1. **Prefer functional components** with hooks over class components:
+   ```typescript
+   // Preferred
+   const ScoreCard: React.FC<ScoreCardProps> = ({ score, player }) => {
+     return (
+       <View style={styles.container}>
+         <Text style={styles.playerName}>{player.name}</Text>
+         <Text style={styles.score}>{score}</Text>
+       </View>
+     );
+   };
+
+   // Avoid
+   class ScoreCard extends React.Component<ScoreCardProps> {
+     render() {
+       return (/* ... */);
+     }
+   }
+   ```
+
+2. **Split components** by responsibility - create small, focused components:
+   ```typescript
+   // Separate logical components
+   const GameScreen = () => (
+     <SafeAreaView style={styles.container}>
+       <Header />
+       <Scoreboard />
+       <PinPad />
+     </SafeAreaView>
+   );
+   ```
+
+3. **Use component composition** to maximize reusability:
+   ```typescript
+   const GameButton = ({ children, ...props }) => (
+     <TouchableOpacity 
+       style={styles.button} 
+       activeOpacity={0.8} 
+       {...props}
+     >
+       <Text style={styles.buttonText}>{children}</Text>
+     </TouchableOpacity>
+   );
+   ```
+
+4. **Implement error boundaries** for component error handling:
+   ```typescript
+   const ErrorFallback = ({ error, resetError }) => (
+     <View style={styles.errorContainer}>
+       <Text style={styles.errorText}>Something went wrong</Text>
+       <Button title="Try again" onPress={resetError} />
+     </View>
+   );
+   ```
+
+## Styling
+
+1. **Use StyleSheet.create** for performance optimization:
+   ```typescript
+   const styles = StyleSheet.create({
+     container: {
+       flex: 1,
+       padding: 16,
+     },
+     title: {
+       fontSize: 24,
+       fontWeight: 'bold',
+     },
+   });
+   ```
+
+2. **Create a theme system** with shared styles and constants:
+   ```typescript
+   // src/theme/colors.ts
+   export const colors = {
+     primary: '#2089dc',
+     secondary: '#8F0CE8',
+     background: '#FFFFFF',
+     text: '#242424',
+     error: '#FF3B30',
+   };
+
+   // Usage
+   import { colors } from '../theme/colors';
+   
+   const styles = StyleSheet.create({
+     header: {
+       backgroundColor: colors.primary,
+     },
+   });
+   ```
+
+3. **Use responsive dimensions** instead of hardcoded values:
+   ```typescript
+   import { Dimensions } from 'react-native';
+   
+   const { width, height } = Dimensions.get('window');
+   
+   const styles = StyleSheet.create({
+     container: {
+       width: width * 0.9,
+       maxHeight: height * 0.5,
+     },
+   });
+   ```
+
+4. **Implement platform-specific styles** when necessary:
+   ```typescript
+   import { Platform } from 'react-native';
+   
+   const styles = StyleSheet.create({
+     shadow: {
+       ...Platform.select({
+         ios: {
+           shadowColor: '#000',
+           shadowOffset: { width: 0, height: 2 },
+           shadowOpacity: 0.2,
+           shadowRadius: 4,
+         },
+         android: {
+           elevation: 4,
+         },
+       }),
+     },
+   });
+   ```
+
+5. **Use style props hierarchy** for complex styling:
+   ```typescript
+   <View 
+     style={[
+       styles.base, 
+       isActive && styles.active,
+       style, // Allow style override from props
+     ]} 
+   />
+   ```
+
+## Performance Optimization
+
+1. **Memoize components** to prevent unnecessary re-renders:
+   ```typescript
+   import React, { memo } from 'react';
+   
+   const PlayerScore = memo(({ name, score }: PlayerScoreProps) => (
+     <View>
+       <Text>{name}: {score}</Text>
+     </View>
+   ));
+   ```
+
+2. **Use `useCallback` for event handlers** passed to child components:
+   ```typescript
+   const handleScoreUpdate = useCallback((newScore: number) => {
+     setScore(newScore);
+   }, []);
+   ```
+
+3. **Optimize lists with `FlatList` and `SectionList`**:
+   ```typescript
+   <FlatList
+     data={players}
+     keyExtractor={(item) => item.id}
+     renderItem={({ item }) => <PlayerItem player={item} />}
+     initialNumToRender={10}
+     maxToRenderPerBatch={10}
+     windowSize={5}
+     removeClippedSubviews={true}
+   />
+   ```
+
+4. **Avoid anonymous function in render**:
+   ```typescript
+   // Avoid
+   <Button onPress={() => handlePress(id)} />
+   
+   // Preferred (with useCallback)
+   const handleButtonPress = useCallback(() => {
+     handlePress(id);
+   }, [id, handlePress]);
+   
+   <Button onPress={handleButtonPress} />
+   ```
+
+5. **Lazy load components** when appropriate:
+   ```typescript
+   const HeavyComponent = React.lazy(() => import('./HeavyComponent'));
+   
+   // In your component
+   <React.Suspense fallback={<LoadingIndicator />}>
+     <HeavyComponent />
+   </React.Suspense>
+   ```
+
+## Expo Best Practices
+
+1. **Use Expo SDK features** instead of third-party alternatives when available:
+   ```typescript
+   import * as FileSystem from 'expo-file-system';
+   import * as Notifications from 'expo-notifications';
+   import { StatusBar } from 'expo-status-bar';
+   ```
+
+2. **Manage assets with Expo's asset system**:
+   ```typescript
+   import { Asset } from 'expo-asset';
+   import { Image } from 'react-native';
+   
+   // Preload assets
+   await Asset.loadAsync([require('../assets/images/logo.png')]);
+   
+   // Use assets
+   <Image source={require('../assets/images/logo.png')} />
+   ```
+
+3. **Handle app lifecycle** with Expo's AppState:
+   ```typescript
+   import { useEffect } from 'react';
+   import { AppState, AppStateStatus } from 'react-native';
+   
+   useEffect(() => {
+     const subscription = AppState.addEventListener('change', handleAppStateChange);
+     return () => subscription.remove();
+   }, []);
+   
+   const handleAppStateChange = (nextAppState: AppStateStatus) => {
+     if (nextAppState === 'active') {
+       // App has come to the foreground
+     }
+   };
+   ```
+
+4. **Use Expo's configuration** in app.json effectively:
+   ```json
+   {
+     "expo": {
+       "name": "Bowling Score",
+       "slug": "bowling-score",
+       "version": "1.0.0",
+       "orientation": "portrait",
+       "icon": "./assets/icon.png",
+       "splash": {
+         "image": "./assets/splash.png",
+         "backgroundColor": "#ffffff"
+       },
+       "updates": {
+         "fallbackToCacheTimeout": 0
+       }
+     }
+   }
+   ```
+
+5. **Leverage Expo's build and deployment tools**:
+   ```bash
+   # Build for testing
+   expo build:android -t apk
+   
+   # Build for production
+   expo build:android -t app-bundle
+   expo build:ios
+   
+   # Deploy updates
+   expo publish
+   ```
+
+## Navigation
+
+1. **Use React Navigation** with type-safe navigation:
+   ```typescript
+   import { NavigationContainer } from '@react-navigation/native';
+   import { createStackNavigator } from '@react-navigation/stack';
+   
+   type RootStackParamList = {
+     Home: undefined;
+     Game: { gameId: string };
+     Results: { gameId: string };
+   };
+   
+   const Stack = createStackNavigator<RootStackParamList>();
+   
+   const Navigation = () => (
+     <NavigationContainer>
+       <Stack.Navigator>
+         <Stack.Screen name="Home" component={HomeScreen} />
+         <Stack.Screen name="Game" component={GameScreen} />
+         <Stack.Screen name="Results" component={ResultsScreen} />
+       </Stack.Navigator>
+     </NavigationContainer>
+   );
+   ```
+
+2. **Create type-safe navigation hooks**:
+   ```typescript
+   import { useNavigation, RouteProp } from '@react-navigation/native';
+   import { StackNavigationProp } from '@react-navigation/stack';
+   
+   type GameScreenNavigationProp = StackNavigationProp<RootStackParamList, 'Game'>;
+   type GameScreenRouteProp = RouteProp<RootStackParamList, 'Game'>;
+   
+   const GameScreen = () => {
+     const navigation = useNavigation<GameScreenNavigationProp>();
+     const route = useRoute<GameScreenRouteProp>();
+     const { gameId } = route.params;
+     
+     // Type-safe navigation
+     const goToResults = () => {
+       navigation.navigate('Results', { gameId });
+     };
+     
+     return (/* ... */);
+   };
+   ```
+
+3. **Implement proper navigation lifecycle management**:
+   ```typescript
+   import { useFocusEffect } from '@react-navigation/native';
+   
+   useFocusEffect(
+     useCallback(() => {
+       // Load data when screen comes into focus
+       const loadData = async () => {
+         // Implementation
+       };
+       
+       loadData();
+       
+       return () => {
+         // Clean up when screen goes out of focus
+       };
+     }, [])
+   );
+   ```
+
+## State Management
+
+1. **Use React Context for app-wide state**:
+   ```typescript
+   // src/contexts/GameContext.tsx
+   interface GameContextType {
+     currentGame: Game | null;
+     startGame: (players: Player[]) => void;
+     addScore: (playerId: string, pins: number) => void;
+   }
+   
+   const GameContext = createContext<GameContextType | undefined>(undefined);
+   
+   export const GameProvider: React.FC = ({ children }) => {
+     // Implementation
+     
+     return (
+       <GameContext.Provider value={contextValue}>
+         {children}
+       </GameContext.Provider>
+     );
+   };
+   
+   export const useGame = () => {
+     const context = useContext(GameContext);
+     if (context === undefined) {
+       throw new Error('useGame must be used within a GameProvider');
+     }
+     return context;
+   };
+   ```
+
+2. **Use local state** for component-specific state:
+   ```typescript
+   const PinPad = () => {
+     const [selectedPins, setSelectedPins] = useState<number>(0);
+     
+     // Implementation
+   };
+   ```
+
+3. **Implement reducers for complex state**:
+   ```typescript
+   type GameAction = 
+     | { type: 'ADD_ROLL'; playerId: string; pins: number }
+     | { type: 'NEXT_PLAYER' }
+     | { type: 'RESET_GAME' };
+   
+   const gameReducer = (state: GameState, action: GameAction): GameState => {
+     switch (action.type) {
+       case 'ADD_ROLL':
+         // Handle adding a roll
+         return { /* new state */ };
+       // Other cases
+       default:
+         return state;
+     }
+   };
+   
+   // In your component
+   const [gameState, dispatch] = useReducer(gameReducer, initialState);
+   ```
+
+## Persistence
+
+1. **Use Async Storage for simple data**:
+   ```typescript
+   import AsyncStorage from '@react-native-async-storage/async-storage';
+   
+   const saveGameHistory = async (game: Game) => {
+     try {
+       // Get existing history
+       const historyString = await AsyncStorage.getItem('gameHistory');
+       const history = historyString ? JSON.parse(historyString) : [];
+       
+       // Add new game
+       history.push(game);
+       
+       // Save updated history
+       await AsyncStorage.setItem('gameHistory', JSON.stringify(history));
+     } catch (error) {
+       console.error('Error saving game history', error);
+     }
+   };
+   ```
+
+2. **Create a structured storage service**:
+   ```typescript
+   // src/services/storage.ts
+   import AsyncStorage from '@react-native-async-storage/async-storage';
+   
+   export class StorageService {
+     static async saveGame(game: Game): Promise<void> {
+       await AsyncStorage.setItem(`game_${game.id}`, JSON.stringify(game));
+     }
+     
+     static async getGame(gameId: string): Promise<Game | null> {
+       const gameString = await AsyncStorage.getItem(`game_${gameId}`);
+       return gameString ? JSON.parse(gameString) : null;
+     }
+     
+     // Other methods
+   }
+   ```
+
+## Error Handling
+
+1. **Implement global error handling**:
+   ```typescript
+   import * as Sentry from 'sentry-expo';
+   
+   // Initialize error tracking
+   Sentry.init({
+     dsn: 'YOUR_DSN_HERE',
+     enableInExpoDevelopment: false,
+     debug: __DEV__,
+   });
+   
+   // In your root component
+   const handleError = (error: Error, stackTrace: string) => {
+     Sentry.Native.captureException(error);
+   };
+   
+   <ErrorBoundary onError={handleError}>
+     <App />
+   </ErrorBoundary>
+   ```
+
+2. **Use try/catch in async operations**:
+   ```typescript
+   const loadGameData = async () => {
+     try {
+       setLoading(true);
+       const data = await gameService.loadGame(gameId);
+       setGameData(data);
+     } catch (error) {
+       setError('Failed to load game data');
+       console.error(error);
+     } finally {
+       setLoading(false);
+     }
+   };
+   ```
+
+## Accessibility
+
+1. **Add accessibility labels and hints**:
+   ```typescript
+   <TouchableOpacity 
+     accessibilityLabel="Add score"
+     accessibilityHint="Adds the selected score to the current frame"
+     onPress={handleAddScore}
+   >
+     <Text>Add Score</Text>
+   </TouchableOpacity>
+   ```
+
+2. **Support screen readers**:
+   ```typescript
+   <View accessibilityRole="header">
+     <Text>Game Score</Text>
+   </View>
+   
+   <TouchableOpacity 
+     accessibilityRole="button"
+     accessibilityState={{ disabled: isDisabled }}
+     onPress={handlePress}
+   >
+     <Text>Submit</Text>
+   </TouchableOpacity>
+   ```
+
+3. **Ensure sufficient contrast ratios**:
+   ```typescript
+   // Good contrast for text
+   const styles = StyleSheet.create({
+     header: {
+       backgroundColor: '#000',
+       color: '#fff', // High contrast
+     },
+   });
+   ```
+
+## Testing
+
+1. **Implement component testing** with React Native Testing Library:
+   ```typescript
+   import { render, fireEvent } from '@testing-library/react-native';
+   
+   describe('ScoreButton', () => {
+     it('calls onPress when pressed', () => {
+       const onPressMock = jest.fn();
+       const { getByText } = render(
+         <ScoreButton value={7} onPress={onPressMock} />
+       );
+       
+       fireEvent.press(getByText('7'));
+       expect(onPressMock).toHaveBeenCalledWith(7);
+     });
+   });
+   ```
+
+2. **Test navigation and screens**:
+   ```typescript
+   import { NavigationContainer } from '@react-navigation/native';
+   
+   const renderWithNavigation = (component) => {
+     return render(
+       <NavigationContainer>
+         {component}
+       </NavigationContainer>
+     );
+   };
+   
+   test('navigates to game screen', () => {
+     const { getByText } = renderWithNavigation(<HomeScreen />);
+     fireEvent.press(getByText('New Game'));
+     expect(getByText('Game Screen')).toBeTruthy();
+   });
+   ```
+
+## Directory Structure
+
+Maintain a clear and consistent directory structure:
+
+```
+src/
+  ├── components/        # Reusable components
+  │   ├── ui/            # Basic UI components
+  │   └── game/          # Game-specific components
+  ├── screens/           # Screen components
+  ├── navigation/        # Navigation configuration
+  ├── contexts/          # Context providers
+  ├── hooks/             # Custom hooks
+  ├── services/          # API and business logic
+  ├── utils/             # Utility functions
+  ├── types/             # TypeScript type definitions
+  ├── constants/         # App constants
+  ├── theme/             # Design tokens and themes
+  └── assets/            # Static assets
+```
+
+## Priority
+
+This rule has HIGH priority and should be strictly followed for all React Native and Expo code in the project. 

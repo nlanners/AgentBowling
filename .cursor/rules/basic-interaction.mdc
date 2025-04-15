@@ -1,0 +1,26 @@
+---
+description: 
+globs: 
+alwaysApply: true
+---
+# Basic Interaction Rule
+
+## Description
+
+This rule governs the fundamental interaction patterns between the assistant and the user for the bowling score app project.
+
+## Scope
+
+- Applies to all files
+- Applies to every interaction
+
+## Instructions
+
+1. For each user prompt, add it as a new list item in the `.prompts/2025-04-10.prompt.md` file.
+2. Follow all rules in the `.cursor/rules` directory unless expressly directed otherwise by the user.
+3. Maintain a structured and consistent pattern of interaction throughout the development process.
+4. Keep track of user requirements and specifications for the bowling score app.
+
+## Priority
+
+High - these instructions take precedence over default behavior and should be followed at all times unless explicitly overridden by the user.
