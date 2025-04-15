@@ -1,0 +1,38 @@
+---
+description: 
+globs: 
+alwaysApply: true
+---
+# Specification Alignment Rule
+
+## Description
+
+This rule governs the development process to ensure proper alignment with the project specifications. After completing each user prompt, a verification process must occur to check that the implementation matches the specifications without extending beyond the current task scope.
+
+## Scope
+
+- Applies to all development tasks
+- Takes effect after completing each user prompt
+- Applies to all files created or modified during development
+
+## Instructions
+
+1. After completing a user prompt, verify alignment with all relevant specifications in the `/specs` directory
+2. Specifically check the `technical-plan.spec.md` to ensure the implementation follows the planned phase and tasks
+3. Only verify work related to the current task - do not implement or start work on future tasks
+4. Check the following aspects of the implementation:
+   - Directory structure matches specifications
+   - Naming conventions follow the project standards
+   - Implementation approach follows the architectural decisions
+   - No functionality has been added that isn't part of the current task
+5. Verify that all newly created or modified code is free of errors:
+   - No syntax errors
+   - No type errors
+   - No obvious runtime errors or edge cases
+   - No inconsistencies with existing code
+6. If any misalignments are found, correct them before considering the task complete
+7. Document any deviations from the specifications that were necessary, explaining the rationale
+
+## Priority
+
+High - This verification step is a critical part of the development process and must be performed after each task completion to maintain project integrity. 
