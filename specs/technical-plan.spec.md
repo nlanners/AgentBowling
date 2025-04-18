@@ -42,17 +42,17 @@ The development will be organized into the following phases:
 
 **Tasks**:
 
-- [ ] Implement bowling score calculation logic
-- [ ] Create game state management using context
-- [ ] Develop frame and scoring utilities
-- [ ] Implement validation for bowling rules
-- [ ] Create unit tests for scoring logic
+- [x] Implement bowling score calculation logic
+- [x] Create game state management using context
+- [x] Develop frame and scoring utilities
+- [x] Implement validation for bowling rules
+- [x] Create unit tests for scoring logic
 
 **Deliverables**:
 
-- [ ] Bowling game model implementation
-- [ ] Scoring logic with tests
-- [ ] Game state management
+- [x] Bowling game model implementation
+- [x] Scoring logic with tests
+- [x] Game state management
 
 ### Phase 3: UI Components and Screens
 
