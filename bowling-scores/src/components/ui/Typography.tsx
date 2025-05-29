@@ -1,71 +1,75 @@
 import React from 'react';
-import { Text, StyleSheet, TextProps } from 'react-native';
+import { Text, TextProps, StyleSheet } from 'react-native';
 import { useTheme } from '../../contexts/ThemeContext';
 import createCommonStyles from '../../theme/styles';
 
-type TypographyVariant =
-  | 'title'
-  | 'subtitle'
-  | 'heading'
-  | 'subheading'
-  | 'body'
-  | 'bodySmall'
-  | 'caption';
+export type TypographyVariant =
+  | 'h1'
+  | 'h2'
+  | 'h3'
+  | 'h4'
+  | 'body1'
+  | 'body2'
+  | 'caption'
+  | 'button'
+  | 'subtitle1'
+  | 'subtitle2';
 
-interface TypographyProps extends TextProps {
+export interface TypographyProps extends TextProps {
   variant?: TypographyVariant;
-  color?: 'primary' | 'secondary' | 'light';
+  align?: 'left' | 'center' | 'right';
+  color?: string;
   children: React.ReactNode;
 }
 
 const Typography: React.FC<TypographyProps> = ({
-  variant = 'body',
-  color = 'primary',
-  children,
+  variant = 'body1',
+  align = 'left',
+  color,
   style,
+  children,
   ...props
 }) => {
   const { theme } = useTheme();
   const commonStyles = createCommonStyles();
 
-  // Get style based on variant
-  const getVariantStyle = () => {
+  const getTypographyStyle = () => {
     switch (variant) {
-      case 'title':
+      case 'h1':
         return commonStyles.title;
-      case 'subtitle':
+      case 'h2':
         return commonStyles.subtitle;
-      case 'heading':
+      case 'h3':
         return commonStyles.heading;
-      case 'subheading':
+      case 'h4':
         return commonStyles.subheading;
-      case 'body':
+      case 'body1':
         return commonStyles.text;
-      case 'bodySmall':
+      case 'body2':
         return commonStyles.smallText;
       case 'caption':
         return commonStyles.caption;
+      case 'button':
+        return commonStyles.buttonText;
+      case 'subtitle1':
+      case 'subtitle2':
+        return commonStyles.subtitle;
       default:
         return commonStyles.text;
-    }
-  };
-
-  // Get color based on color prop
-  const getColorStyle = () => {
-    switch (color) {
-      case 'primary':
-        return { color: theme.colors.text.primary };
-      case 'secondary':
-        return { color: theme.colors.text.secondary };
-      case 'light':
-        return { color: theme.colors.text.light };
-      default:
-        return { color: theme.colors.text.primary };
     }
   };
 
   return (
-    <Text style={[getVariantStyle(), getColorStyle(), style]} {...props}>
+    <Text
+      style={[
+        getTypographyStyle(),
+        {
+          textAlign: align,
+          color: color || theme.colors.text.primary,
+        },
+        style,
+      ]}
+      {...props}>
       {children}
     </Text>
   );

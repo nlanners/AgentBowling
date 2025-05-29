@@ -3,26 +3,22 @@ import { View, StyleSheet, ViewProps } from 'react-native';
 import { useTheme } from '../../contexts/ThemeContext';
 import createCommonStyles from '../../theme/styles';
 
-interface CardProps extends ViewProps {
-  variant?: 'default' | 'elevated';
+export interface CardProps extends ViewProps {
+  elevated?: boolean;
   children: React.ReactNode;
 }
 
 const Card: React.FC<CardProps> = ({
-  variant = 'default',
-  children,
+  elevated = false,
   style,
+  children,
   ...props
 }) => {
-  const { theme } = useTheme();
   const commonStyles = createCommonStyles();
 
   return (
     <View
-      style={[
-        variant === 'elevated' ? commonStyles.elevatedCard : commonStyles.card,
-        style,
-      ]}
+      style={[elevated ? commonStyles.elevatedCard : commonStyles.card, style]}
       {...props}>
       {children}
     </View>

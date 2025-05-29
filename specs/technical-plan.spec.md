@@ -63,11 +63,11 @@ The development will be organized into the following phases:
   - [x] Card component
   - [x] Container component
   - [x] Typography component
-  - [ ] Input component
-  - [ ] Badge component
-  - [ ] Icon component
-- [ ] Create scoreboard component
-- [ ] Develop pin input interface
+  - [x] Input component
+  - [x] Badge component
+  - [x] Icon component
+- [x] Create scoreboard component
+- [x] Develop pin input interface
 - [x] Build game screen with real-time scoring
 - [x] Implement player management screens
 - [x] Create game setup and summary screens
@@ -77,7 +77,7 @@ The development will be organized into the following phases:
 - [x] Fundamental UI component library
 - [x] Functional game screens
 - [x] Player management interface
-- [ ] Complete scoreboard implementation
+- [x] Complete scoreboard implementation
 
 ### Phase 4: History and Statistics
 
