@@ -1,10 +1,21 @@
 import React, { useState } from 'react';
-import { Player } from '../types/game';
+import {
+  View,
+  Text,
+  TextInput,
+  StyleSheet,
+  TouchableOpacity,
+} from 'react-native';
+import { useTheme } from '../contexts/ThemeContext';
+import createCommonStyles from '../theme/styles';
 import {
   GameValidationHelper,
   ValidationError,
 } from '../utils/validation/gameValidationHelper';
 import ValidationErrorComponent from './ValidationError';
+import { Player } from '../types';
+import Button from './ui/Button';
+import Typography from './ui/Typography';
 
 interface PlayerFormProps {
   onAddPlayer: (player: Player) => void;
@@ -20,9 +31,10 @@ const PlayerForm: React.FC<PlayerFormProps> = ({
   const [playerName, setPlayerName] = useState('');
   const [validationError, setValidationError] =
     useState<ValidationError | null>(null);
+  const { theme } = useTheme();
+  const commonStyles = createCommonStyles();
 
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
+  const handleSubmit = () => {
     setValidationError(null);
 
     try {
@@ -55,8 +67,7 @@ const PlayerForm: React.FC<PlayerFormProps> = ({
       onAddPlayer({
         id: Date.now().toString(),
         name: playerName.trim(),
-        frames: [],
-        totalScore: 0,
+        isActive: true,
       });
 
       // Reset form
@@ -67,8 +78,10 @@ const PlayerForm: React.FC<PlayerFormProps> = ({
   };
 
   return (
-    <div className='mb-6'>
-      <h3 className='text-lg font-medium mb-2'>Add Player</h3>
+    <View style={styles.container}>
+      <Typography variant='heading' style={styles.heading}>
+        Add Player
+      </Typography>
 
       {validationError && (
         <ValidationErrorComponent
@@ -77,27 +90,42 @@ const PlayerForm: React.FC<PlayerFormProps> = ({
         />
       )}
 
-      <form onSubmit={handleSubmit} className='flex flex-col sm:flex-row gap-2'>
-        <input
-          type='text'
+      <View style={styles.formContainer}>
+        <TextInput
           value={playerName}
-          onChange={(e) => setPlayerName(e.target.value)}
+          onChangeText={setPlayerName}
           placeholder='Enter player name'
-          className='px-4 py-2 border rounded-md flex-grow'
-          aria-label='Player name'
+          style={commonStyles.input}
+          accessibilityLabel='Player name'
         />
-        <button
-          type='submit'
-          className='bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-md'>
+        <Button onPress={handleSubmit} variant='primary'>
           Add Player
-        </button>
-      </form>
+        </Button>
+      </View>
 
-      <p className='text-sm text-gray-500 mt-2'>
+      <Typography variant='caption' style={styles.counter}>
         {existingPlayers.length}/{maxPlayers} players added
-      </p>
-    </div>
+      </Typography>
+    </View>
   );
 };
+
+const styles = StyleSheet.create({
+  container: {
+    marginBottom: 24,
+  },
+  heading: {
+    marginBottom: 8,
+  },
+  formContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    marginTop: 8,
+  },
+  counter: {
+    marginTop: 8,
+  },
+});
 
 export default PlayerForm;

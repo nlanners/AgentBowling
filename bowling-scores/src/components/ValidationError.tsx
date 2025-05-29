@@ -1,9 +1,12 @@
 import React from 'react';
+import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
 import { ValidationError } from '../utils/validation/gameValidationHelper';
+import { useTheme } from '../contexts/ThemeContext';
+import createCommonStyles from '../theme/styles';
 
 interface ValidationErrorProps {
   error: ValidationError | null;
-  className?: string;
+  style?: object;
   onClose?: () => void;
 }
 
@@ -12,20 +15,79 @@ interface ValidationErrorProps {
  */
 const ValidationErrorComponent: React.FC<ValidationErrorProps> = ({
   error,
-  className = '',
+  style,
   onClose,
 }) => {
+  const { theme } = useTheme();
+  const commonStyles = createCommonStyles();
+
   if (!error) return null;
+
+  // Create styles with theme context
+  const dynamicStyles = StyleSheet.create({
+    errorContainer: {
+      backgroundColor: `${theme.colors.error}20`, // 20% opacity
+      borderWidth: 1,
+      borderColor: `${theme.colors.error}30`, // 30% opacity
+      borderRadius: theme.borderRadius.md,
+      padding: theme.spacing.md,
+      marginBottom: theme.spacing.md,
+    },
+    contentRow: {
+      flexDirection: 'row',
+      justifyContent: 'space-between',
+      alignItems: 'flex-start',
+    },
+    messageContainer: {
+      flexDirection: 'row',
+      alignItems: 'flex-start',
+      flex: 1,
+    },
+    icon: {
+      fontSize: theme.typography.fontSize.lg,
+      marginRight: theme.spacing.sm,
+    },
+    errorMessage: {
+      color: theme.colors.error,
+    },
+    detailsList: {
+      marginTop: theme.spacing.xs,
+    },
+    detailItem: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      marginTop: theme.spacing.xs / 2,
+    },
+    detailDot: {
+      marginRight: theme.spacing.xs,
+      fontSize: theme.typography.fontSize.sm,
+    },
+    detailText: {
+      color: theme.colors.text.secondary,
+    },
+    closeButton: {
+      padding: theme.spacing.xs,
+    },
+    closeButtonText: {
+      fontSize: theme.typography.fontSize.lg,
+      color: theme.colors.error,
+    },
+  });
 
   const renderDetails = () => {
     if (!error.details || error.details.length === 0) return null;
 
     return (
-      <ul className='mt-1 list-disc pl-5 text-sm'>
+      <View style={dynamicStyles.detailsList}>
         {error.details.map((detail, index) => (
-          <li key={index}>{detail}</li>
+          <View key={index} style={dynamicStyles.detailItem}>
+            <Text style={dynamicStyles.detailDot}>•</Text>
+            <Text style={[commonStyles.smallText, dynamicStyles.detailText]}>
+              {detail}
+            </Text>
+          </View>
         ))}
-      </ul>
+      </View>
     );
   };
 
@@ -47,28 +109,30 @@ const ValidationErrorComponent: React.FC<ValidationErrorProps> = ({
   };
 
   return (
-    <div
-      className={`bg-red-50 border border-red-200 rounded-md p-3 mb-4 ${className}`}
-      role='alert'>
-      <div className='flex justify-between items-start'>
-        <div className='flex items-start'>
-          <span className='text-xl mr-2'>{getIconForErrorType()}</span>
-          <div>
-            <p className='font-medium text-red-800'>{error.message}</p>
+    <View
+      style={[dynamicStyles.errorContainer, style]}
+      accessibilityRole='alert'>
+      <View style={dynamicStyles.contentRow}>
+        <View style={dynamicStyles.messageContainer}>
+          <Text style={dynamicStyles.icon}>{getIconForErrorType()}</Text>
+          <View>
+            <Text style={[commonStyles.subheading, dynamicStyles.errorMessage]}>
+              {error.message}
+            </Text>
             {renderDetails()}
-          </div>
-        </div>
+          </View>
+        </View>
+
         {onClose && (
-          <button
-            type='button'
-            className='text-red-500 hover:text-red-700 focus:outline-none'
-            onClick={onClose}
-            aria-label='Close'>
-            <span className='text-xl'>&times;</span>
-          </button>
+          <TouchableOpacity
+            onPress={onClose}
+            accessibilityLabel='Close'
+            style={dynamicStyles.closeButton}>
+            <Text style={dynamicStyles.closeButtonText}>✕</Text>
+          </TouchableOpacity>
         )}
-      </div>
-    </div>
+      </View>
+    </View>
   );
 };
 

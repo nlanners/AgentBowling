@@ -1,20 +1,47 @@
-// Mock the react-native-mmkv module
+// Add any global test setup here
+
+// Mock the MMKV module
 jest.mock('react-native-mmkv', () => {
-  const mockStorage = {
-    set: jest.fn(),
-    getString: jest.fn(),
-    getBoolean: jest.fn(),
-    getNumber: jest.fn(),
-    delete: jest.fn(),
-    clearAll: jest.fn(),
+  // Create a singleton store for the mock data
+  const mockStore = {};
+
+  // Define mock functions that operate on the store
+  const mockSet = jest.fn((key, value) => {
+    mockStore[key] = value;
+    return true;
+  });
+
+  const mockGetString = jest.fn((key) => {
+    return mockStore[key] || null;
+  });
+
+  const mockDelete = jest.fn((key) => {
+    delete mockStore[key];
+    return true;
+  });
+
+  const mockGetAllKeys = jest.fn(() => {
+    return Object.keys(mockStore);
+  });
+
+  const mockClearAll = jest.fn(() => {
+    Object.keys(mockStore).forEach((key) => {
+      delete mockStore[key];
+    });
+    return true;
+  });
+
+  // Create the mock instance that will be returned when new MMKV() is called
+  const mockInstance = {
+    set: mockSet,
+    getString: mockGetString,
+    delete: mockDelete,
+    getAllKeys: mockGetAllKeys,
+    clearAll: mockClearAll,
   };
 
+  // Return the constructor function that will create the mock
   return {
-    MMKV: jest.fn(() => mockStorage),
+    MMKV: jest.fn(() => mockInstance),
   };
 });
-
-// Configure Expo mocks if needed
-jest.mock('expo-status-bar', () => ({
-  StatusBar: jest.fn().mockImplementation(() => null),
-}));

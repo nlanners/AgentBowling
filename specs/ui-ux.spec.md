@@ -30,6 +30,113 @@ The application will follow these core design principles:
 - **Body Text**: 16sp, regular
 - **Labels**: 14sp, medium
 
+## Styling System
+
+The application will use React Native's StyleSheet system with a centralized theming approach to ensure consistency and maintainability.
+
+### Theme Structure
+
+The theme will be organized as follows:
+
+```typescript
+/src
+  /theme
+    index.ts          // Main theme exports
+    colors.ts         // Color definitions
+    spacing.ts        // Spacing scale
+    typography.ts     // Text styles
+    styles.ts         // Common component styles
+```
+
+### Core Theme Variables
+
+The theme will define these core design tokens:
+
+1. **Colors**
+
+   - Primary and secondary colors
+   - Text colors (primary, secondary)
+   - Background colors
+   - Semantic colors (success, warning, error)
+   - State colors (active, disabled)
+
+2. **Spacing**
+
+   - Consistent spacing scale (xs, sm, md, lg, xl)
+   - Margins and padding values
+   - Layout grid values
+
+3. **Typography**
+
+   - Font sizes
+   - Font weights
+   - Line heights
+   - Letter spacing
+
+4. **Border Radius**
+   - Consistent rounding values
+
+### Common Component Styles
+
+The theme will provide reusable style functions for common components:
+
+- Container layouts
+- Cards
+- Buttons (primary, secondary, text-only)
+- Form elements
+- Typography variants
+
+### Implementation Approach
+
+1. **Centralized theme definition**:
+
+   ```typescript
+   // src/theme/index.ts
+   export const COLORS = { ... };
+   export const SPACING = { ... };
+   export const FONT_SIZE = { ... };
+   export const BORDER_RADIUS = { ... };
+   ```
+
+2. **Component-specific styles using StyleSheet.create()**:
+
+   ```typescript
+   // Component file
+   import { StyleSheet } from 'react-native';
+   import { COLORS, SPACING } from '../theme';
+
+   const styles = StyleSheet.create({
+     container: {
+       backgroundColor: COLORS.background.primary,
+       padding: SPACING.md,
+     },
+   });
+   ```
+
+3. **Reusable style composition**:
+
+   ```typescript
+   // Component usage
+   import { createCommonStyles } from '../theme/styles';
+
+   const MyComponent = () => {
+     const commonStyles = createCommonStyles();
+     return (
+       <View style={[commonStyles.container, styles.customContainer]}>
+         <Text style={commonStyles.heading}>Title</Text>
+       </View>
+     );
+   };
+   ```
+
+### Best Practices
+
+1. Always import theme variables directly from the theme folder
+2. Use StyleSheet.create() for better performance
+3. Compose styles using arrays when extending common styles
+4. Keep component-specific styles in component files
+5. Use consistent naming conventions for style properties
+
 ## Screen Flow
 
 The application will consist of the following primary screens:
