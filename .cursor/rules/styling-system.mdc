@@ -1,0 +1,224 @@
+---
+description: Any time css, styling, or theming is being worked on
+globs: 
+alwaysApply: false
+---
+# Styling System Rule
+
+## Description
+
+This rule establishes the standard styling approach for the bowling score application. It provides clear guidance on how to implement and maintain consistent styling across the application to prevent inconsistencies and styling methodology shifts.
+
+## Scope
+
+- Applies to all UI components
+- Applies to all screen layouts
+- Applies to all theme-related code
+
+## Instructions
+
+### Theme Structure
+
+1. **Location**: All theme-related code MUST reside within the `/src/theme` directory.
+
+2. **Files Organization**:
+
+   - `index.ts` - Main exports and theme composition
+   - `colors.ts` - Color palette definitions
+   - `spacing.ts` - Spacing scale
+   - `typography.ts` - Text styling
+   - `styles.ts` - Common component styles
+   - Additional files as needed for specific domains
+
+3. **Import Pattern**: Always import theme variables from the theme directory, NEVER hardcode values:
+
+   ```typescript
+   // CORRECT
+   import { COLORS, SPACING } from '../theme';
+
+   // INCORRECT
+   const styles = StyleSheet.create({
+     container: {
+       backgroundColor: '#007AFF', // Hardcoded value
+       padding: 16, // Hardcoded value
+     },
+   });
+   ```
+
+### Implementation Rules
+
+1. **StyleSheet Usage**: ALWAYS use `StyleSheet.create()` for component styles:
+
+   ```typescript
+   // CORRECT
+   const styles = StyleSheet.create({
+     container: {
+       /* styles */
+     },
+   });
+
+   // INCORRECT
+   const styles = {
+     container: {
+       /* styles */
+     },
+   };
+   ```
+
+2. **Style Composition**: Use array syntax for style composition:
+
+   ```typescript
+   // CORRECT
+   <View style={[styles.base, isActive && styles.active]}>
+
+   // INCORRECT
+   <View style={{...styles.base, ...(isActive ? styles.active : {})}}>
+   ```
+
+3. **Common Styles**: Use the provided common style functions:
+
+   ```typescript
+   // CORRECT
+   const commonStyles = createCommonStyles();
+   <View style={[commonStyles.container, styles.specificStyle]}>
+
+   // INCORRECT
+   <View style={[{ padding: 16, backgroundColor: '#FFF' }, styles.specificStyle]}>
+   ```
+
+4. **Component-Specific Styles**: Define component-specific styles in the component file, not in the theme:
+
+   ```typescript
+   // CORRECT - In component file
+   const styles = StyleSheet.create({
+     playerCard: {
+       /* specific styling */
+     },
+   });
+
+   // INCORRECT - Adding component-specific styles to theme
+   // Don't add PlayerCard styles to the theme directory
+   ```
+
+5. **Responsive Dimensions**: Use the theme's responsive utilities for sizing:
+
+   ```typescript
+   // CORRECT
+   import { SPACING } from '../theme';
+   width: SPACING.lg * 2;
+
+   // INCORRECT
+   width: 48; // Hardcoded value
+   ```
+
+### Naming Conventions
+
+1. **Theme Constants**: Use UPPERCASE for theme constants:
+
+   ```typescript
+   export const COLORS = {
+     /* ... */
+   };
+   export const SPACING = {
+     /* ... */
+   };
+   ```
+
+2. **Style Properties**: Use camelCase for style properties:
+
+   ```typescript
+   const styles = StyleSheet.create({
+     containerWrapper: {
+       /* ... */
+     },
+     headerText: {
+       /* ... */
+     },
+   });
+   ```
+
+3. **Theme Scale**: Use consistent scale naming (xs, sm, md, lg, xl):
+   ```typescript
+   export const SPACING = {
+     xs: 4,
+     sm: 8,
+     md: 16,
+     lg: 24,
+     xl: 32,
+   };
+   ```
+
+### Theme Extension
+
+1. **Adding New Theme Variables**:
+
+   - Add to the appropriate theme file
+   - Export from index.ts
+   - Document the purpose of the new variable
+
+2. **Extending Common Styles**:
+
+   - Add new common styles to styles.ts
+   - Follow the existing patterns and naming conventions
+
+3. **NEVER Create Alternative Theme Systems**:
+   - Do NOT create separate theme variables outside the theme directory
+   - Do NOT introduce alternative styling libraries without consensus
+
+## Priority
+
+High - Consistent styling is critical for maintaining a professional and coherent user experience. This rule must be followed for all UI development.
+
+## Implementation Notes
+
+The styling system should:
+
+- Promote visual consistency
+- Improve development efficiency
+- Enhance maintainability
+- Support theming capabilities
+- Facilitate responsive design
+
+## Examples
+
+### Example of Proper Implementation
+
+```typescript
+// src/theme/colors.ts
+export const COLORS = {
+  primary: '#007AFF',
+  background: {
+    primary: '#FFFFFF',
+    secondary: '#F5F5F5',
+  },
+  text: {
+    primary: '#000000',
+    secondary: '#6E6E6E',
+  },
+};
+
+// src/components/PlayerCard.tsx
+import { StyleSheet, View, Text } from 'react-native';
+import { COLORS, SPACING } from '../theme';
+import { createCommonStyles } from '../theme/styles';
+
+const PlayerCard = ({ player }) => {
+  const commonStyles = createCommonStyles();
+
+  return (
+    <View style={[commonStyles.card, styles.playerCard]}>
+      <Text style={commonStyles.text}>{player.name}</Text>
+    </View>
+  );
+};
+
+const styles = StyleSheet.create({
+  playerCard: {
+    marginVertical: SPACING.sm,
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+  },
+});
+```
+
+By following these guidelines, we will maintain a consistent styling approach throughout the application and avoid shifting between different styling methodologies.

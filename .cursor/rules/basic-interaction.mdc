@@ -16,11 +16,29 @@ This rule governs the fundamental interaction patterns between the assistant and
 
 ## Instructions
 
-1. For each user prompt, add it as a new list item in the `.prompts/2025-04-10.prompt.md` file.
-2. Follow all rules in the `.cursor/rules` directory unless expressly directed otherwise by the user.
+1. IMMEDIATELY after receiving each user prompt, before any other work:
+   - Add the prompt as a new list item in the `.prompts/2025-04-10.prompt.md` file
+   - Use the format: `- {exact user prompt}`
+
+2. Process checklist for EVERY response:
+   - [ ] Update prompts file with new user query (FIRST STEP)
+   - [ ] Read and understand user request completely
+   - [ ] Reference specifications in @specs if relevant
+   - [ ] Perform requested technical work
+   - [ ] Verify alignment with specifications
+   - [ ] Check for lint/type errors
+   - [ ] Update technical plan if work is completed
+
 3. Maintain a structured and consistent pattern of interaction throughout the development process.
+
 4. Keep track of user requirements and specifications for the bowling score app.
 
 ## Priority
 
-High - these instructions take precedence over default behavior and should be followed at all times unless explicitly overridden by the user.
+Highest - The prompt recording step MUST be performed FIRST before any other actions, without exception.
+
+## Implementation Notes
+
+- The prompt recording step is a critical requirement and must never be skipped
+- This is the foundation of the project's documentation and history
+- Failure to record prompts breaks the project documentation chain

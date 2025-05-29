@@ -1,8 +1,13 @@
 import React from 'react';
-import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
+import { View, StyleSheet } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { RootStackParamList } from '../types';
+import { useTheme } from '../contexts/ThemeContext';
+import createCommonStyles from '../theme/styles';
+import Typography from '../components/ui/Typography';
+import Container from '../components/ui/Container';
+import Button from '../components/ui/Button';
 
 type HomeScreenNavigationProp = NativeStackNavigationProp<
   RootStackParamList,
@@ -11,56 +16,36 @@ type HomeScreenNavigationProp = NativeStackNavigationProp<
 
 const HomeScreen: React.FC = () => {
   const navigation = useNavigation<HomeScreenNavigationProp>();
+  const { theme } = useTheme();
+  const commonStyles = createCommonStyles();
 
   return (
-    <View style={styles.container}>
-      <Text style={styles.title}>Bowling Score Tracker</Text>
+    <Container variant='centered'>
+      <Typography variant='title'>Bowling Score Tracker</Typography>
 
       <View style={styles.buttonContainer}>
-        <TouchableOpacity
-          style={styles.button}
+        <Button
+          variant='primary'
+          fullWidth
           onPress={() => navigation.navigate('PlayerSetup')}>
-          <Text style={styles.buttonText}>New Game</Text>
-        </TouchableOpacity>
+          New Game
+        </Button>
 
-        <TouchableOpacity
-          style={styles.button}
+        <Button
+          variant='secondary'
+          fullWidth
           onPress={() => navigation.navigate('History')}>
-          <Text style={styles.buttonText}>View History</Text>
-        </TouchableOpacity>
+          View History
+        </Button>
       </View>
-    </View>
+    </Container>
   );
 };
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    padding: 20,
-  },
-  title: {
-    fontSize: 28,
-    fontWeight: 'bold',
-    marginBottom: 40,
-    textAlign: 'center',
-  },
   buttonContainer: {
     width: '100%',
     maxWidth: 300,
-  },
-  button: {
-    backgroundColor: '#007AFF',
-    padding: 15,
-    borderRadius: 10,
-    marginVertical: 10,
-    alignItems: 'center',
-  },
-  buttonText: {
-    color: 'white',
-    fontSize: 18,
-    fontWeight: '600',
   },
 });
 
