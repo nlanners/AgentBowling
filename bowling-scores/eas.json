@@ -12,10 +12,9 @@
         "buildType": "apk",
         "withoutCredentials": true
       },
-      "env": {
-        "EXPO_PREBUILD_SKIP_CLEANUP": "1"
-      },
-      "prebuildCommand": "npx expo prebuild --platform android --clean"
+      "prebuildCommand": "echo 'Starting prebuild...' && npx expo prebuild --platform android --clean --no-install",
+      "node": "20.12.0",
+      "buildArtifactPaths": ["android/**/*"]
     },
     "preview": {
       "distribution": "internal"
