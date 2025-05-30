@@ -21,7 +21,7 @@ const HomeScreen: React.FC = () => {
 
   return (
     <Container variant='centered'>
-      <Typography variant='title'>Bowling Score Tracker</Typography>
+      <Typography variant='h1'>Bowling Score Tracker</Typography>
 
       <View style={styles.buttonContainer}>
         <Button

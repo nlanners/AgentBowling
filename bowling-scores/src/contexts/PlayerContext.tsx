@@ -17,9 +17,17 @@ import { MMKV } from 'react-native-mmkv';
 const PLAYERS_STORAGE_KEY = 'BowlingApp.Players';
 
 // Storage instance for persisting players
-const storage = new MMKV({
-  id: 'bowling-app-storage',
-});
+let storage: MMKV | null = null;
+
+try {
+  storage = new MMKV({
+    id: 'bowling-app-storage',
+  });
+} catch (error) {
+  console.error('Failed to initialize MMKV storage:', error);
+  // Provide a fallback if MMKV fails to initialize
+  storage = null;
+}
 
 // Player action types
 export enum PlayerActionType {
@@ -63,6 +71,8 @@ interface PlayerContextType extends PlayerContextState {
 
 // Load players from storage
 function loadPlayersFromStorage(): Player[] {
+  if (!storage) return [];
+
   const storedPlayers = storage.getString(PLAYERS_STORAGE_KEY);
   if (storedPlayers) {
     try {
@@ -76,6 +86,8 @@ function loadPlayersFromStorage(): Player[] {
 
 // Save players to storage
 function savePlayersToStorage(players: Player[]): void {
+  if (!storage) return;
+
   try {
     storage.set(PLAYERS_STORAGE_KEY, JSON.stringify(players));
   } catch (e) {

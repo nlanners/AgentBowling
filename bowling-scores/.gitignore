@@ -46,3 +46,6 @@ coverage/
 
 # PR description
 pr-description.md
+# native directories for CNG/Prebuild with EAS
+/android/
+/ios/
