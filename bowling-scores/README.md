@@ -15,7 +15,7 @@ A React Native mobile app for tracking bowling scores, built with Expo and TypeS
 ### Prerequisites
 
 - Node.js (14.x or higher)
-- npm or yarn
+- npm
 - Expo CLI
 
 ### Installation
@@ -26,14 +26,16 @@ A React Native mobile app for tracking bowling scores, built with Expo and TypeS
    ```
    npm install
    ```
-   or
-   ```
-   yarn install
-   ```
 
 ### Running the App
 
 Start the development server:
+
+```
+npm start
+```
+
+or
 
 ```
 npx expo start
