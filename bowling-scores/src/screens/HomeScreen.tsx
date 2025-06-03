@@ -42,6 +42,14 @@ const HomeScreen: React.FC = () => {
           onPress={() => navigation.navigate('History')}>
           View History
         </Button>
+
+        <Button
+          leftIcon='bar-chart'
+          variant='outline'
+          style={[styles.menuButton, { marginTop: 8 }]}
+          onPress={() => navigation.navigate('Statistics')}>
+          Statistics
+        </Button>
       </View>
     </Container>
   );

@@ -31,6 +31,7 @@ export const darkTheme = {
       default: colors.gray[900],
       paper: colors.gray[800],
       dark: colors.gray[900],
+      primary: colors.common.black,
     },
     text: {
       primary: colors.common.white,
@@ -38,8 +39,12 @@ export const darkTheme = {
       disabled: colors.gray[600],
       hint: colors.gray[500],
       light: colors.common.white,
+      onPrimary: colors.common.white,
     },
     divider: colors.gray[700],
+    border: colors.gray[700],
+    surface: colors.gray[800],
+    white: colors.common.white,
   },
 };
 

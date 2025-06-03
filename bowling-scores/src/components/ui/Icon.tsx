@@ -29,7 +29,21 @@ export type IconName =
   | 'person'
   | 'info'
   | 'check'
-  | 'error';
+  | 'error'
+  // Statistics icons
+  | 'star'
+  | 'check-circle'
+  | 'alert-circle'
+  | 'trending-up'
+  | 'users'
+  | 'calendar'
+  | 'award'
+  | 'bar-chart'
+  // Additional icons
+  | 'trash'
+  | 'filter'
+  | 'filter-off'
+  | 'refresh';
 
 export type IconSize = 'small' | 'medium' | 'large' | number;
 
@@ -94,11 +108,37 @@ const Icon: React.FC<IconProps> = ({
       case 'person':
         return '👤';
       case 'info':
-        return 'ℹ';
+        return 'ⓘ';
       case 'check':
         return '✓';
       case 'error':
         return '!';
+      // Statistics icons
+      case 'star':
+        return '★';
+      case 'check-circle':
+        return '◉';
+      case 'alert-circle':
+        return '⊗';
+      case 'trending-up':
+        return '↗';
+      case 'users':
+        return '👥';
+      case 'calendar':
+        return '📅';
+      case 'award':
+        return '🏆';
+      case 'bar-chart':
+        return '📊';
+      // Additional icons
+      case 'trash':
+        return '🗑';
+      case 'filter':
+        return '🔍';
+      case 'filter-off':
+        return '🔍';
+      case 'refresh':
+        return '🔄';
       default:
         return '';
     }

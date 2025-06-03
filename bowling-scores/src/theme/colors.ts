@@ -70,6 +70,7 @@ export const colors = {
     default: palette.gray[50],
     paper: palette.common.white,
     dark: palette.gray[900],
+    primary: palette.common.white,
   },
 
   text: {
@@ -78,9 +79,13 @@ export const colors = {
     disabled: palette.gray[500],
     hint: palette.gray[500],
     light: palette.common.white,
+    onPrimary: palette.common.white,
   },
 
   divider: palette.gray[300],
+  border: palette.gray[300],
+  surface: palette.common.white,
+  white: palette.common.white,
 };
 
 export default colors;

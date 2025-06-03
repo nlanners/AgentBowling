@@ -9,6 +9,8 @@ import PlayerSetupScreen from '../screens/PlayerSetupScreen';
 import GameScreen from '../screens/GameScreen';
 import GameSummaryScreen from '../screens/GameSummaryScreen';
 import HistoryScreen from '../screens/HistoryScreen';
+import GameDetailsScreen from '../screens/GameDetailsScreen';
+import StatisticsScreen from '../screens/StatisticsScreen';
 
 // Import types
 import { RootStackParamList } from '../types';
@@ -31,6 +33,8 @@ const AppNavigator: React.FC = () => {
         <Stack.Screen name='Game' component={GameScreen} />
         <Stack.Screen name='GameSummary' component={GameSummaryScreen} />
         <Stack.Screen name='History' component={HistoryScreen} />
+        <Stack.Screen name='GameDetails' component={GameDetailsScreen} />
+        <Stack.Screen name='Statistics' component={StatisticsScreen} />
       </Stack.Navigator>
     </NavigationContainer>
   );
