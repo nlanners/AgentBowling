@@ -1,16 +1,20 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   View,
-  Text,
   StyleSheet,
-  TouchableOpacity,
   TextInput,
   FlatList,
   Alert,
+  TouchableOpacity,
+  Text,
+  SafeAreaView,
 } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { RootStackParamList, Player } from '../types';
+import { useGame } from '../contexts/GameContext';
+import { Container, Typography, Button, Card } from '../components/ui';
+import { useTheme } from '../contexts/ThemeContext';
 
 type PlayerSetupScreenNavigationProp = NativeStackNavigationProp<
   RootStackParamList,
@@ -19,8 +23,14 @@ type PlayerSetupScreenNavigationProp = NativeStackNavigationProp<
 
 const PlayerSetupScreen: React.FC = () => {
   const navigation = useNavigation<PlayerSetupScreenNavigationProp>();
+  const { resetGame } = useGame();
+  const { theme } = useTheme();
   const [players, setPlayers] = useState<Player[]>([]);
   const [newPlayerName, setNewPlayerName] = useState('');
+
+  useEffect(() => {
+    resetGame();
+  }, [resetGame]);
 
   const addPlayer = () => {
     if (!newPlayerName.trim()) {
@@ -51,152 +61,130 @@ const PlayerSetupScreen: React.FC = () => {
   };
 
   const renderPlayerItem = ({ item }: { item: Player }) => (
-    <View style={styles.playerItem}>
-      <Text style={styles.playerName}>{item.name}</Text>
-      <TouchableOpacity
-        style={styles.removeButton}
-        onPress={() => removePlayer(item.id)}>
-        <Text style={styles.removeButtonText}>Remove</Text>
-      </TouchableOpacity>
-    </View>
+    <Card style={styles.playerItem}>
+      <Typography variant='body1'>{item.name}</Typography>
+      <Button
+        variant='text'
+        onPress={() => removePlayer(item.id)}
+        style={{ paddingHorizontal: 8 }}>
+        <Text style={{ color: theme.colors.error }}>Remove</Text>
+      </Button>
+    </Card>
   );
 
   return (
-    <View style={styles.container}>
-      <Text style={styles.title}>Player Setup</Text>
+    <SafeAreaView style={styles.safeArea}>
+      <View style={styles.container}>
+        <Typography variant='h1' align='center' style={styles.title}>
+          Player Setup
+        </Typography>
 
-      <View style={styles.inputContainer}>
-        <TextInput
-          style={styles.input}
-          placeholder='Enter player name'
-          value={newPlayerName}
-          onChangeText={setNewPlayerName}
+        <View style={styles.inputContainer}>
+          <TextInput
+            style={styles.input}
+            placeholder='Enter player name'
+            value={newPlayerName}
+            onChangeText={setNewPlayerName}
+            autoFocus={true}
+          />
+          <Button
+            variant='primary'
+            onPress={addPlayer}
+            style={styles.addButton}>
+            Add
+          </Button>
+        </View>
+
+        <FlatList
+          data={players}
+          keyExtractor={(item) => item.id}
+          renderItem={renderPlayerItem}
+          style={styles.playerList}
+          contentContainerStyle={styles.playerListContent}
+          ListEmptyComponent={
+            <Typography
+              variant='body1'
+              align='center'
+              color={theme.colors.text.secondary}
+              style={styles.emptyText}>
+              No players added yet
+            </Typography>
+          }
         />
-        <TouchableOpacity style={styles.addButton} onPress={addPlayer}>
-          <Text style={styles.buttonText}>Add</Text>
-        </TouchableOpacity>
+
+        <View style={styles.footer}>
+          <Button
+            variant='secondary'
+            onPress={() => navigation.goBack()}
+            style={{ marginRight: 10, flex: 1 }}>
+            Back
+          </Button>
+
+          <Button
+            variant='primary'
+            onPress={startGame}
+            disabled={players.length === 0}
+            style={{ flex: 1 }}>
+            Start Game
+          </Button>
+        </View>
       </View>
-
-      <FlatList
-        data={players}
-        keyExtractor={(item) => item.id}
-        renderItem={renderPlayerItem}
-        style={styles.playerList}
-        ListEmptyComponent={
-          <Text style={styles.emptyText}>No players added yet</Text>
-        }
-      />
-
-      <View style={styles.footer}>
-        <TouchableOpacity
-          style={styles.backButton}
-          onPress={() => navigation.goBack()}>
-          <Text style={styles.backButtonText}>Back</Text>
-        </TouchableOpacity>
-
-        <TouchableOpacity
-          style={[
-            styles.startButton,
-            players.length === 0 && styles.disabledButton,
-          ]}
-          onPress={startGame}
-          disabled={players.length === 0}>
-          <Text style={styles.buttonText}>Start Game</Text>
-        </TouchableOpacity>
-      </View>
-    </View>
+    </SafeAreaView>
   );
 };
 
 const styles = StyleSheet.create({
+  safeArea: {
+    flex: 1,
+    backgroundColor: '#fff',
+  },
   container: {
     flex: 1,
-    padding: 20,
+    paddingHorizontal: 20,
   },
   title: {
-    fontSize: 24,
-    fontWeight: 'bold',
-    marginVertical: 20,
-    textAlign: 'center',
+    marginVertical: 24,
   },
   inputContainer: {
     flexDirection: 'row',
-    marginBottom: 20,
+    marginBottom: 24,
   },
   input: {
     flex: 1,
     borderWidth: 1,
     borderColor: '#ccc',
-    borderRadius: 5,
-    padding: 10,
-    marginRight: 10,
+    borderRadius: 8,
+    padding: 12,
+    marginRight: 12,
+    height: 50, // Match height with buttons
+    fontSize: 16,
   },
   addButton: {
-    backgroundColor: '#007AFF',
-    justifyContent: 'center',
-    alignItems: 'center',
-    paddingHorizontal: 15,
-    borderRadius: 5,
+    minWidth: 80,
+    height: 50,
   },
   playerList: {
     flex: 1,
+  },
+  playerListContent: {
+    paddingBottom: 16,
   },
   playerItem: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    backgroundColor: '#f8f8f8',
-    padding: 15,
-    borderRadius: 5,
-    marginBottom: 10,
+    padding: 16,
+    marginBottom: 12,
+    borderRadius: 8,
   },
-  playerName: {
-    fontSize: 16,
-  },
-  removeButton: {
-    padding: 5,
-  },
-  removeButtonText: {
-    color: '#FF3B30',
+  emptyText: {
+    marginTop: 40,
   },
   footer: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    marginTop: 20,
-  },
-  backButton: {
-    borderWidth: 1,
-    borderColor: '#007AFF',
-    padding: 15,
-    borderRadius: 5,
-    flex: 1,
-    marginRight: 10,
-    alignItems: 'center',
-  },
-  backButtonText: {
-    color: '#007AFF',
-    fontSize: 16,
-    fontWeight: '600',
-  },
-  startButton: {
-    backgroundColor: '#007AFF',
-    padding: 15,
-    borderRadius: 5,
-    flex: 1,
-    alignItems: 'center',
-  },
-  disabledButton: {
-    backgroundColor: '#ccc',
-  },
-  buttonText: {
-    color: 'white',
-    fontSize: 16,
-    fontWeight: '600',
-  },
-  emptyText: {
-    textAlign: 'center',
-    marginTop: 30,
-    color: '#777',
+    marginTop: 24,
+    marginBottom: 24,
   },
 });
 

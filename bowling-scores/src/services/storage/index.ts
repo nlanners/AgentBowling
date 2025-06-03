@@ -7,9 +7,17 @@ import { STORAGE_KEYS } from '../../types';
 import { Player, Game, GameHistory } from '../../types';
 
 // Create storage instance with app namespace
-const storage = new MMKV({
-  id: 'bowling-app-storage',
-});
+let storage: MMKV | null = null;
+
+try {
+  storage = new MMKV({
+    id: 'bowling-app-storage',
+  });
+} catch (error) {
+  console.error('Failed to initialize MMKV storage:', error);
+  // Provide a fallback if MMKV fails to initialize
+  storage = null;
+}
 
 /**
  * StorageService handles all data persistence operations
@@ -20,6 +28,8 @@ class StorageService {
    * @param game - The current game object to persist
    */
   saveCurrentGame(game: Game): void {
+    if (!storage) return;
+
     try {
       storage.set(STORAGE_KEYS.CURRENT_GAME, JSON.stringify(game));
     } catch (error) {
@@ -32,6 +42,8 @@ class StorageService {
    * @returns The current game object or null if none exists
    */
   loadCurrentGame(): Game | null {
+    if (!storage) return null;
+
     try {
       const gameJson = storage.getString(STORAGE_KEYS.CURRENT_GAME);
       return gameJson ? JSON.parse(gameJson) : null;
@@ -46,6 +58,8 @@ class StorageService {
    * @param players - List of player objects to persist
    */
   savePlayers(players: Player[]): void {
+    if (!storage) return;
+
     try {
       storage.set(STORAGE_KEYS.PLAYERS, JSON.stringify(players));
     } catch (error) {
@@ -58,6 +72,8 @@ class StorageService {
    * @returns List of players or empty array if none exist
    */
   loadPlayers(): Player[] {
+    if (!storage) return [];
+
     try {
       const playersJson = storage.getString(STORAGE_KEYS.PLAYERS);
       return playersJson ? JSON.parse(playersJson) : [];
@@ -72,6 +88,8 @@ class StorageService {
    * @param game - The completed game to add to history
    */
   saveGameToHistory(game: Game): void {
+    if (!storage) return;
+
     try {
       const history = this.loadGameHistory();
       history.games.push(game);
@@ -86,6 +104,8 @@ class StorageService {
    * @returns GameHistory object or default empty history
    */
   loadGameHistory(): GameHistory {
+    if (!storage) return { games: [] };
+
     try {
       const historyJson = storage.getString(STORAGE_KEYS.GAME_HISTORY);
       return historyJson ? JSON.parse(historyJson) : { games: [] };
@@ -99,6 +119,8 @@ class StorageService {
    * Clear the current game state
    */
   clearCurrentGame(): void {
+    if (!storage) return;
+
     try {
       storage.delete(STORAGE_KEYS.CURRENT_GAME);
     } catch (error) {
@@ -110,6 +132,8 @@ class StorageService {
    * Clear all app data - use with caution
    */
   clearAllData(): void {
+    if (!storage) return;
+
     try {
       storage.clearAll();
     } catch (error) {

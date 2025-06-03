@@ -17,9 +17,17 @@ import { MMKV } from 'react-native-mmkv';
 const HISTORY_STORAGE_KEY = 'BowlingApp.GameHistory';
 
 // Storage instance for persisting game history
-const storage = new MMKV({
-  id: 'bowling-app-storage',
-});
+let storage: MMKV | null = null;
+
+try {
+  storage = new MMKV({
+    id: 'bowling-app-storage',
+  });
+} catch (error) {
+  console.error('Failed to initialize MMKV storage:', error);
+  // Provide a fallback if MMKV fails to initialize
+  storage = null;
+}
 
 // History action types
 export enum HistoryActionType {
@@ -63,6 +71,8 @@ interface PlayerStatistics {
 
 // Load game history from storage
 function loadHistoryFromStorage(): Game[] {
+  if (!storage) return [];
+
   const storedHistory = storage.getString(HISTORY_STORAGE_KEY);
   if (storedHistory) {
     try {
@@ -76,6 +86,8 @@ function loadHistoryFromStorage(): Game[] {
 
 // Save game history to storage
 function saveHistoryToStorage(history: Game[]): void {
+  if (!storage) return;
+
   try {
     storage.set(HISTORY_STORAGE_KEY, JSON.stringify(history));
   } catch (e) {

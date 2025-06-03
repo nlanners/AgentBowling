@@ -34,9 +34,17 @@ interface ThemeContextType {
 const ThemeContext = createContext<ThemeContextType | undefined>(undefined);
 
 // Storage instance for persisting theme preference
-const storage = new MMKV({
-  id: 'bowling-app-storage',
-});
+let storage: MMKV | null = null;
+
+try {
+  storage = new MMKV({
+    id: 'bowling-app-storage',
+  });
+} catch (error) {
+  console.error('Failed to initialize MMKV storage:', error);
+  // Provide a fallback if MMKV fails to initialize
+  storage = null;
+}
 
 // Theme provider component
 export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({
@@ -47,8 +55,11 @@ export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({
 
   // Initialize theme mode from storage or default to system
   const [mode, setMode] = useState<ThemeMode>(() => {
-    const savedMode = storage.getString(THEME_STORAGE_KEY);
-    return (savedMode as ThemeMode) || 'system';
+    if (storage) {
+      const savedMode = storage.getString(THEME_STORAGE_KEY);
+      return (savedMode as ThemeMode) || 'system';
+    }
+    return 'system';
   });
 
   // Determine if dark mode is active
@@ -75,7 +86,9 @@ export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({
 
   // Update stored theme preference when mode changes
   useEffect(() => {
-    storage.set(THEME_STORAGE_KEY, mode);
+    if (storage) {
+      storage.set(THEME_STORAGE_KEY, mode);
+    }
   }, [mode]);
 
   // Context value

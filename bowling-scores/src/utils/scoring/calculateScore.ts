@@ -17,6 +17,13 @@ export function calculateFrameScore(
     return 0;
   }
 
+  // Special case for the 10th frame
+  if (frameIndex === 9) {
+    // In the 10th frame, we count all rolls directly
+    return frame.rolls.reduce((sum, roll) => sum + roll.pinsKnocked, 0);
+  }
+
+  // For frames 1-9
   // Get pins knocked down in the current frame
   const pinsKnocked = frame.rolls.reduce(
     (total, roll) => total + roll.pinsKnocked,
@@ -47,6 +54,21 @@ function calculateStrikeBonus(frames: Frame[], frameIndex: number): number {
   let bonus = 0;
   let rollCount = 0;
   let currentFrameIndex = frameIndex;
+
+  // 10th frame is handled separately in calculateFrameScore
+  if (frameIndex === 9) {
+    return 0;
+  }
+
+  // For 9th frame, if the 10th frame has strikes, we need to include those bonus rolls
+  if (frameIndex === 8 && frames[9] && frames[9].isStrike) {
+    // If 10th frame has at least two rolls and first is a strike
+    if (frames[9].rolls.length >= 2) {
+      bonus += frames[9].rolls[0].pinsKnocked; // First roll (strike)
+      bonus += frames[9].rolls[1].pinsKnocked; // Second roll
+      return bonus;
+    }
+  }
 
   // We need the next two rolls after a strike
   while (rollCount < 2 && currentFrameIndex < frames.length - 1) {
@@ -83,6 +105,11 @@ function calculateStrikeBonus(frames: Frame[], frameIndex: number): number {
  * @returns The bonus score (next one roll)
  */
 function calculateSpareBonus(frames: Frame[], frameIndex: number): number {
+  // 10th frame is handled separately in calculateFrameScore
+  if (frameIndex === 9) {
+    return 0;
+  }
+
   // For a spare, the bonus is the value of the next roll
   if (frameIndex < frames.length - 1) {
     const nextFrame = frames[frameIndex + 1];

@@ -1,8 +1,19 @@
-import React, { useState, useEffect } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, Alert } from 'react-native';
+import React, { useEffect } from 'react';
+import {
+  View,
+  StyleSheet,
+  TouchableOpacity,
+  Alert,
+  ScrollView,
+} from 'react-native';
 import { RouteProp, useNavigation, useRoute } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
-import { RootStackParamList, Player } from '../types';
+import { RootStackParamList } from '../types';
+import { Scoreboard } from '../components/scoreboard';
+import { PinInput } from '../components/game';
+import { Container, Typography, Button, Card } from '../components/ui';
+import { useGame } from '../contexts/GameContext';
+import { useTheme } from '../contexts/ThemeContext';
 
 type GameScreenRouteProp = RouteProp<RootStackParamList, 'Game'>;
 type GameScreenNavigationProp = NativeStackNavigationProp<
@@ -14,138 +25,140 @@ const GameScreen: React.FC = () => {
   const navigation = useNavigation<GameScreenNavigationProp>();
   const route = useRoute<GameScreenRouteProp>();
   const { players } = route.params;
+  const { game, createGame, resetGame, isGameOver } = useGame();
+  const { theme } = useTheme();
 
-  const [currentPlayerIndex, setCurrentPlayerIndex] = useState(0);
-  const [currentFrame, setCurrentFrame] = useState(1);
-  const [currentRoll, setCurrentRoll] = useState(1);
+  // Initialize a new game when component mounts
+  useEffect(() => {
+    // Always reset and create a fresh game
+    resetGame();
+    createGame(players);
+  }, [players, createGame, resetGame]);
 
-  // Placeholder for the scoreboard component
-  const renderScoreboard = () => {
-    return (
-      <View style={styles.scoreboardPlaceholder}>
-        <Text style={styles.placeholderText}>
-          Scoreboard will be implemented here
-        </Text>
-      </View>
-    );
+  // Handle navigating to game summary
+  const handleEndGame = () => {
+    if (game && isGameOver()) {
+      navigation.navigate('GameSummary', { players });
+    } else {
+      Alert.alert(
+        'End Game',
+        'Are you sure you want to end this game? All progress will be lost.',
+        [
+          { text: 'Cancel', style: 'cancel' },
+          {
+            text: 'End Game',
+            style: 'destructive',
+            onPress: () => navigation.goBack(),
+          },
+        ]
+      );
+    }
   };
 
-  // Placeholder for the pin input component
-  const renderPinInput = () => {
-    return (
-      <View style={styles.pinInputPlaceholder}>
-        <Text style={styles.placeholderText}>
-          Pin input interface will be implemented here
-        </Text>
-
-        {/* Temporary navigation to game summary for testing */}
-        <TouchableOpacity
-          style={styles.tempButton}
-          onPress={() => navigation.navigate('GameSummary', { players })}>
-          <Text style={styles.tempButtonText}>End Game (Temp)</Text>
-        </TouchableOpacity>
-      </View>
-    );
+  // Handle navigating to home screen
+  const handleReturnHome = () => {
+    navigation.navigate('Home');
   };
+
+  // Handle viewing game summary
+  const handleViewSummary = () => {
+    navigation.navigate('GameSummary', { players });
+  };
+
+  if (!game) {
+    return (
+      <Container variant='centered'>
+        <Typography variant='h3'>Loading game...</Typography>
+      </Container>
+    );
+  }
 
   return (
-    <View style={styles.container}>
-      <View style={styles.header}>
-        <Text style={styles.headerText}>
-          Frame {currentFrame} • Roll {currentRoll}
-        </Text>
-        <Text style={styles.playerName}>
-          {players[currentPlayerIndex].name}'s turn
-        </Text>
-      </View>
+    <Container>
+      <ScrollView
+        style={styles.scrollView}
+        contentContainerStyle={styles.scrollContent}>
+        <View style={styles.header}>
+          <Typography variant='h3'>Frame {game.currentFrame + 1}</Typography>
+          <Typography variant='body1'>
+            {players[game.currentPlayer].name}'s turn
+          </Typography>
+        </View>
 
-      {renderScoreboard()}
-      {renderPinInput()}
+        <Scoreboard game={game} />
 
-      <TouchableOpacity
-        style={styles.backButton}
-        onPress={() => {
-          Alert.alert(
-            'End Game',
-            'Are you sure you want to end this game? All progress will be lost.',
-            [
-              { text: 'Cancel', style: 'cancel' },
-              {
-                text: 'End Game',
-                style: 'destructive',
-                onPress: () => navigation.goBack(),
-              },
-            ]
-          );
-        }}>
-        <Text style={styles.backButtonText}>End Game</Text>
-      </TouchableOpacity>
-    </View>
+        {!game.isComplete && <PinInput game={game} />}
+
+        {game.isComplete ? (
+          <Card style={styles.gameCompleteCard}>
+            <Typography
+              variant='h2'
+              align='center'
+              color={theme.colors.success}
+              style={styles.gameCompleteText}>
+              Game Complete!
+            </Typography>
+
+            <View style={styles.buttonRow}>
+              <Button
+                variant='secondary'
+                style={[styles.actionButton, { marginRight: 12 }]}
+                onPress={handleReturnHome}>
+                Return Home
+              </Button>
+
+              <Button
+                variant='primary'
+                style={styles.actionButton}
+                onPress={handleViewSummary}>
+                View Summary
+              </Button>
+            </View>
+          </Card>
+        ) : (
+          <Button
+            variant='secondary'
+            style={styles.endGameButton}
+            onPress={handleEndGame}>
+            End Game
+          </Button>
+        )}
+      </ScrollView>
+    </Container>
   );
 };
 
 const styles = StyleSheet.create({
-  container: {
+  scrollView: {
     flex: 1,
-    padding: 16,
+  },
+  scrollContent: {
+    paddingBottom: 24,
   },
   header: {
     marginBottom: 20,
     alignItems: 'center',
   },
-  headerText: {
-    fontSize: 18,
-    fontWeight: '600',
-    marginBottom: 5,
-  },
-  playerName: {
-    fontSize: 24,
-    fontWeight: 'bold',
-    color: '#007AFF',
-  },
-  scoreboardPlaceholder: {
-    backgroundColor: '#f0f0f0',
-    borderRadius: 8,
-    padding: 20,
-    marginBottom: 20,
-    alignItems: 'center',
-    justifyContent: 'center',
-    height: 200,
-  },
-  pinInputPlaceholder: {
-    backgroundColor: '#f0f0f0',
-    borderRadius: 8,
-    padding: 20,
-    marginBottom: 20,
-    alignItems: 'center',
-    justifyContent: 'center',
-    height: 300,
-  },
-  placeholderText: {
-    color: '#777',
-    textAlign: 'center',
-    marginBottom: 20,
-  },
-  backButton: {
-    backgroundColor: '#FF3B30',
-    padding: 15,
-    borderRadius: 8,
-    alignItems: 'center',
-  },
-  backButtonText: {
-    color: 'white',
-    fontSize: 16,
-    fontWeight: '600',
-  },
-  tempButton: {
-    backgroundColor: '#007AFF',
-    padding: 10,
-    borderRadius: 8,
+  endGameButton: {
     marginTop: 20,
+    marginBottom: 16,
   },
-  tempButtonText: {
-    color: 'white',
-    fontSize: 14,
+  gameCompleteCard: {
+    marginTop: 20,
+    marginBottom: 16,
+    padding: 20,
+  },
+  gameCompleteText: {
+    marginBottom: 20,
+    fontWeight: 'bold',
+  },
+  buttonRow: {
+    flexDirection: 'row',
+    width: '100%',
+  },
+  actionButton: {
+    flex: 1,
+    paddingVertical: 12,
   },
 });
 

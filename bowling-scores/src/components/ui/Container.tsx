@@ -3,17 +3,15 @@ import { View, StyleSheet, ViewProps } from 'react-native';
 import { useTheme } from '../../contexts/ThemeContext';
 import createCommonStyles from '../../theme/styles';
 
-type ContainerVariant = 'default' | 'centered' | 'screen';
-
-interface ContainerProps extends ViewProps {
-  variant?: ContainerVariant;
+export interface ContainerProps extends ViewProps {
+  variant?: 'default' | 'centered';
   children: React.ReactNode;
 }
 
 const Container: React.FC<ContainerProps> = ({
   variant = 'default',
-  children,
   style,
+  children,
   ...props
 }) => {
   const { theme } = useTheme();
@@ -22,12 +20,8 @@ const Container: React.FC<ContainerProps> = ({
   // Get container style based on variant
   const getContainerStyle = () => {
     switch (variant) {
-      case 'default':
-        return commonStyles.container;
       case 'centered':
         return commonStyles.centeredContainer;
-      case 'screen':
-        return commonStyles.screenContainer;
       default:
         return commonStyles.container;
     }

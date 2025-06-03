@@ -12,7 +12,7 @@ import createCommonStyles from '../../theme/styles';
 type ButtonVariant = 'primary' | 'secondary' | 'text';
 type ButtonSize = 'small' | 'medium' | 'large';
 
-interface ButtonProps extends TouchableOpacityProps {
+export interface ButtonProps extends TouchableOpacityProps {
   variant?: ButtonVariant;
   size?: ButtonSize;
   isLoading?: boolean;

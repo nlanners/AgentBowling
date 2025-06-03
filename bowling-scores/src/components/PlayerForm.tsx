@@ -79,7 +79,7 @@ const PlayerForm: React.FC<PlayerFormProps> = ({
 
   return (
     <View style={styles.container}>
-      <Typography variant='heading' style={styles.heading}>
+      <Typography variant='h3' style={styles.heading}>
         Add Player
       </Typography>
 
