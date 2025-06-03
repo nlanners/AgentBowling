@@ -129,6 +129,28 @@ describe('Bowling Score Calculation', () => {
 
       expect(score).toBe(23); // 10 + 10 + 3 (bonus)
     });
+
+    it('should calculate 10th frame with three strikes correctly', () => {
+      const frames = Array(10)
+        .fill(null)
+        .map(() => createFrame([]));
+      frames[9] = createFrame([10, 10, 10]); // 10th frame with three strikes
+      frames[9].isStrike = true;
+
+      const score = calculateFrameScore(frames, 9);
+      expect(score).toBe(30); // 10 + 10 + 10
+    });
+
+    it('should calculate 10th frame with spare and bonus correctly', () => {
+      const frames = Array(10)
+        .fill(null)
+        .map(() => createFrame([]));
+      frames[9] = createFrame([9, 1, 8]); // 10th frame with spare and bonus
+      frames[9].isSpare = true;
+
+      const score = calculateFrameScore(frames, 9);
+      expect(score).toBe(18); // 9 + 1 + 8
+    });
   });
 
   describe('calculateGameScore', () => {
@@ -172,6 +194,56 @@ describe('Bowling Score Calculation', () => {
 
       expect(updatedFrames[2].score).toBe(9);
       expect(updatedFrames[2].cumulativeScore).toBe(44);
+    });
+
+    it('should calculate a perfect game (300 score)', () => {
+      // Create 10 frames with all strikes
+      const frames = Array(9)
+        .fill(null)
+        .map(() => {
+          const frame = createFrame([10]);
+          frame.isStrike = true;
+          return frame;
+        });
+
+      // 10th frame with 3 strikes
+      const tenthFrame = createFrame([10, 10, 10]);
+      tenthFrame.isStrike = true;
+      frames.push(tenthFrame);
+
+      const updatedFrames = calculateGameScore(frames);
+
+      // Each frame should have a score of 30 (strike + 2 bonus strikes)
+      // The 10th frame should be 30 points (all three strikes count directly)
+      for (let i = 0; i < 9; i++) {
+        expect(updatedFrames[i].score).toBe(30);
+      }
+      expect(updatedFrames[9].score).toBe(30);
+
+      // The final cumulative score should be 300
+      expect(updatedFrames[9].cumulativeScore).toBe(300);
+    });
+
+    it('should calculate the 9th frame score correctly with a strike in the 10th frame', () => {
+      const frames = Array(10)
+        .fill(null)
+        .map(() => createFrame([]));
+
+      // Set up a strike in the 9th frame
+      frames[8] = createFrame([10]);
+      frames[8].isStrike = true;
+
+      // Set up the 10th frame with a strike and 9
+      frames[9] = createFrame([10, 9, 0]);
+      frames[9].isStrike = true;
+
+      const updatedFrames = calculateGameScore(frames);
+
+      // 9th frame score should be 10 (strike) + 10 (first 10th frame roll) + 9 (second 10th frame roll) = 29
+      expect(updatedFrames[8].score).toBe(29);
+
+      // 10th frame score should be 10 + 9 + 0 = 19
+      expect(updatedFrames[9].score).toBe(19);
     });
   });
 });

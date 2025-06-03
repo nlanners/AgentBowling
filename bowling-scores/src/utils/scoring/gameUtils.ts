@@ -112,10 +112,34 @@ function determineNextFrameAndPlayer(game: Game): {
   if (currentFrame === 9) {
     // If it's a strike or spare, the player gets extra rolls in the 10th frame
     if (frame.isStrike || frame.isSpare) {
-      // If we don't have all the rolls yet, stay on the same frame/player
+      // For a strike in the first roll, player gets 2 more rolls
+      if (frame.rolls.length === 1 && frame.isStrike) {
+        return { nextFrame: currentFrame, nextPlayer: currentPlayer };
+      }
+
+      // For a strike followed by a strike, player gets 1 more roll
       if (
-        (frame.isStrike && frame.rolls.length < 3) ||
-        (frame.isSpare && frame.rolls.length < 3)
+        frame.rolls.length === 2 &&
+        frame.rolls[0].pinsKnocked === 10 &&
+        frame.rolls[1].pinsKnocked === 10
+      ) {
+        return { nextFrame: currentFrame, nextPlayer: currentPlayer };
+      }
+
+      // For a strike followed by a non-strike, player gets 1 more roll
+      if (
+        frame.rolls.length === 2 &&
+        frame.rolls[0].pinsKnocked === 10 &&
+        frame.rolls[1].pinsKnocked < 10
+      ) {
+        return { nextFrame: currentFrame, nextPlayer: currentPlayer };
+      }
+
+      // For a spare, player gets 1 more roll
+      if (
+        frame.rolls.length === 2 &&
+        frame.rolls[0].pinsKnocked < 10 &&
+        frame.rolls[0].pinsKnocked + frame.rolls[1].pinsKnocked === 10
       ) {
         return { nextFrame: currentFrame, nextPlayer: currentPlayer };
       }

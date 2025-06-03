@@ -25,32 +25,89 @@ const PinPad: React.FC<PinPadProps> = ({ game, onPinSelect }) => {
   // Determine if we're on the first roll
   const isFirstRoll = rollIndex === 0;
 
+  // Determine if we're in the 10th frame
+  const isTenthFrame = currentFrame === 9;
+
   // Determine if we need to show the spare button
-  const showSpareButton = !isFirstRoll && !game.isComplete;
+  // We should show the spare button on second rolls for frames 1-9,
+  // and also on the second/third roll of the 10th frame when a spare is possible
+  let showSpareButton = false;
+
+  if (!game.isComplete) {
+    if (!isTenthFrame) {
+      // For frames 1-9, show spare button on second roll
+      showSpareButton = rollIndex === 1;
+    } else {
+      // For 10th frame, the logic is more complex
+      if (rollIndex === 1) {
+        // On second roll, show spare button only if first roll wasn't a strike
+        showSpareButton = frame.rolls[0].pinsKnocked < 10;
+      } else if (rollIndex === 2) {
+        // On third roll, show spare button only if:
+        // 1. First roll was a strike AND second roll was not a strike, OR
+        // 2. First roll was not a strike AND second roll made a spare
+        const firstRoll = frame.rolls[0].pinsKnocked;
+        const secondRoll = frame.rolls[1].pinsKnocked;
+
+        if (firstRoll === 10) {
+          // After a strike, show spare button only if second roll wasn't a strike
+          showSpareButton = secondRoll < 10;
+        } else {
+          // No spare button on third roll if the second roll wasn't preceded by a strike
+          showSpareButton = false;
+        }
+      }
+    }
+  }
+
+  // Determine if we should show the strike button
+  // We always show it on first rolls, and in 10th frame we show it on bonus rolls too
+  let showStrikeButton = isFirstRoll;
+
+  if (isTenthFrame && !game.isComplete) {
+    if (rollIndex === 1) {
+      // Always show strike button on second roll in 10th frame if first was a strike
+      showStrikeButton = frame.rolls[0].pinsKnocked === 10;
+    } else if (rollIndex === 2) {
+      // On third roll, show strike button if:
+      // 1. First two rolls were strikes, OR
+      // 2. First roll + second roll = 10 (spare)
+      const firstRoll = frame.rolls[0].pinsKnocked;
+      const secondRoll = frame.rolls[1].pinsKnocked;
+
+      showStrikeButton =
+        (firstRoll === 10 && secondRoll === 10) || // Two strikes
+        (firstRoll < 10 && firstRoll + secondRoll === 10); // Spare
+    }
+  }
 
   // Determine remaining pins based on previous roll in this frame
   const remainingPins =
-    isFirstRoll || currentFrame === 9
+    isFirstRoll || (isTenthFrame && (frame?.isStrike || showStrikeButton))
       ? 10
       : 10 - (frame.rolls[0]?.pinsKnocked || 0);
-
-  // In 10th frame with a strike or spare, we may need all pins
-  const isTenthFrameSpecial =
-    currentFrame === 9 && rollIndex >= 1 && (frame.isStrike || frame.isSpare);
 
   // Handle pin selection
   const handlePinSelection = useCallback(
     (value: number) => {
       // Convert spare value to actual pins remaining
       if (value === -1 && !isFirstRoll && frame) {
-        // Calculate the value needed for a spare
-        const pinsForSpare = 10 - (frame.rolls[0]?.pinsKnocked || 0);
-        onPinSelect(pinsForSpare);
+        // For 10th frame, need to handle different cases
+        if (isTenthFrame && rollIndex === 2) {
+          const secondRoll = frame.rolls[1].pinsKnocked;
+          // Calculate the value needed for a spare based on the second roll
+          const pinsForSpare = 10 - secondRoll;
+          onPinSelect(pinsForSpare);
+        } else {
+          // Calculate the value needed for a spare
+          const pinsForSpare = 10 - (frame.rolls[0]?.pinsKnocked || 0);
+          onPinSelect(pinsForSpare);
+        }
       } else {
         onPinSelect(value);
       }
     },
-    [isFirstRoll, frame, onPinSelect]
+    [isFirstRoll, frame, onPinSelect, isTenthFrame, rollIndex]
   );
 
   // Check if a pin value is valid
@@ -67,7 +124,7 @@ const PinPad: React.FC<PinPadProps> = ({ game, onPinSelect }) => {
   const renderPinButtons = () => {
     const buttons = [];
 
-    // For the first row, show 7-8-9-10 or 7-8-9-/ for second roll
+    // For the first row, show 7-8-9-10/X or 7-8-9-/ depending on the situation
     buttons.push(
       <View key='row1' style={styles.row}>
         <PinButton
@@ -97,7 +154,7 @@ const PinPad: React.FC<PinPadProps> = ({ game, onPinSelect }) => {
             value={10}
             isSpecial={true}
             onPress={handlePinSelection}
-            isDisabled={!isPinValid(10) || game.isComplete}
+            isDisabled={!isPinValid(10) || game.isComplete || !showStrikeButton}
           />
         )}
       </View>
@@ -160,20 +217,30 @@ const PinPad: React.FC<PinPadProps> = ({ game, onPinSelect }) => {
     return buttons;
   };
 
+  // Determine the appropriate roll label
+  let rollLabel = isFirstRoll ? 'First Roll' : 'Second Roll';
+  if (isTenthFrame && rollIndex === 2) {
+    rollLabel = 'Third Roll';
+  }
+
   return (
     <View style={styles.container}>
       <View style={styles.header}>
         <Typography variant='h3' align='center'>
-          {isFirstRoll ? 'First Roll' : 'Second Roll'}
+          {rollLabel}
         </Typography>
         {!isFirstRoll && (
           <Typography
             variant='body1'
             align='center'
             color={theme.colors.text.secondary}>
-            {`${
-              frame?.rolls[0]?.pinsKnocked || 0
-            } pins down, ${remainingPins} remaining`}
+            {isTenthFrame && rollIndex === 2
+              ? `${frame?.rolls[1]?.pinsKnocked || 0} pins down, ${
+                  10 - (frame?.rolls[1]?.pinsKnocked || 0)
+                } remaining`
+              : `${
+                  frame?.rolls[0]?.pinsKnocked || 0
+                } pins down, ${remainingPins} remaining`}
           </Typography>
         )}
       </View>

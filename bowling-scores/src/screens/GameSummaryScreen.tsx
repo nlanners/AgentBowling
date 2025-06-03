@@ -1,14 +1,11 @@
 import React from 'react';
-import {
-  View,
-  Text,
-  StyleSheet,
-  TouchableOpacity,
-  ScrollView,
-} from 'react-native';
+import { View, StyleSheet, ScrollView } from 'react-native';
 import { RouteProp, useNavigation, useRoute } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { RootStackParamList, Player } from '../types';
+import { Container, Typography, Button, Card } from '../components/ui';
+import { useTheme } from '../contexts/ThemeContext';
+import { useGame } from '../contexts/GameContext';
 
 type GameSummaryScreenRouteProp = RouteProp<RootStackParamList, 'GameSummary'>;
 type GameSummaryScreenNavigationProp = NativeStackNavigationProp<
@@ -20,72 +17,103 @@ const GameSummaryScreen: React.FC = () => {
   const navigation = useNavigation<GameSummaryScreenNavigationProp>();
   const route = useRoute<GameSummaryScreenRouteProp>();
   const { players } = route.params;
+  const { game } = useGame();
+  const { theme } = useTheme();
 
-  // Mock data for demonstration
-  const mockScores = players.map((player) => ({
-    ...player,
-    score: Math.floor(Math.random() * 200) + 50, // Random score between 50-250
-  }));
+  // If we have game data, use it; otherwise fall back to mocked data
+  const playerScores = game?.scores
+    ? players.map((player, index) => ({
+        ...player,
+        score: game.scores?.[index] ?? 0,
+      }))
+    : players.map((player) => ({
+        ...player,
+        // Fallback to mock data if game data isn't available
+        score: Math.floor(Math.random() * 200) + 50, // Random score between 50-250
+      }));
 
   // Sort players by score (highest first)
-  const sortedPlayers = [...mockScores].sort((a, b) => b.score - a.score);
+  const sortedPlayers = [...playerScores].sort((a, b) => b.score - a.score);
+
+  // Navigate to home screen
+  const handleReturnHome = () => {
+    navigation.navigate('Home');
+  };
+
+  // Navigate to player setup to start a new game
+  const handleNewGame = () => {
+    navigation.navigate('PlayerSetup');
+  };
 
   return (
-    <View style={styles.container}>
-      <Text style={styles.title}>Game Summary</Text>
+    <Container>
+      <Typography variant='h1' align='center' style={styles.title}>
+        Game Summary
+      </Typography>
 
-      <ScrollView style={styles.resultsContainer}>
-        {sortedPlayers.map((player, index) => (
-          <View key={player.id} style={styles.scoreCard}>
-            <View style={styles.rankContainer}>
-              <Text style={styles.rankText}>{index + 1}</Text>
+      <Card style={styles.resultsContainer}>
+        <ScrollView>
+          {sortedPlayers.map((player, index) => (
+            <View key={player.id} style={styles.scoreCard}>
+              <View
+                style={[
+                  styles.rankContainer,
+                  { backgroundColor: theme.colors.primary.main },
+                ]}>
+                <Typography
+                  variant='body1'
+                  color={theme.colors.common.white}
+                  style={styles.rankText}>
+                  {index + 1}
+                </Typography>
+              </View>
+              <View style={styles.playerInfoContainer}>
+                <Typography variant='body1' style={styles.playerName}>
+                  {player.name}
+                </Typography>
+                <Typography variant='h3' style={styles.scoreText}>
+                  {player.score}
+                </Typography>
+              </View>
             </View>
-            <View style={styles.playerInfoContainer}>
-              <Text style={styles.playerName}>{player.name}</Text>
-              <Text style={styles.scoreText}>{player.score}</Text>
-            </View>
-          </View>
-        ))}
-      </ScrollView>
+          ))}
+        </ScrollView>
+      </Card>
 
-      <View style={styles.statsContainer}>
-        <Text style={styles.statsTitle}>Game Statistics</Text>
-        <Text style={styles.statsText}>
+      <Card style={styles.statsContainer}>
+        <Typography variant='h3' style={styles.statsTitle}>
+          Game Statistics
+        </Typography>
+        <Typography variant='body1' color={theme.colors.text.secondary}>
           This section will display detailed game statistics.
-        </Text>
-      </View>
+        </Typography>
+      </Card>
 
       <View style={styles.buttonContainer}>
-        <TouchableOpacity
-          style={styles.button}
-          onPress={() => navigation.navigate('Home')}>
-          <Text style={styles.buttonText}>Return to Home</Text>
-        </TouchableOpacity>
+        <Button
+          variant='secondary'
+          style={[styles.button, { marginRight: 8 }]}
+          onPress={handleReturnHome}>
+          Return to Home
+        </Button>
 
-        <TouchableOpacity
-          style={styles.button}
-          onPress={() => navigation.navigate('PlayerSetup')}>
-          <Text style={styles.buttonText}>New Game</Text>
-        </TouchableOpacity>
+        <Button variant='primary' style={styles.button} onPress={handleNewGame}>
+          New Game
+        </Button>
       </View>
-    </View>
+    </Container>
   );
 };
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    padding: 16,
-  },
   title: {
-    fontSize: 28,
-    fontWeight: 'bold',
-    textAlign: 'center',
     marginVertical: 16,
   },
   resultsContainer: {
     flex: 1,
     marginBottom: 16,
+    padding: 0,
+    overflow: 'hidden',
   },
   scoreCard: {
     flexDirection: 'row',
@@ -95,14 +123,11 @@ const styles = StyleSheet.create({
     overflow: 'hidden',
   },
   rankContainer: {
-    backgroundColor: '#007AFF',
     width: 40,
     justifyContent: 'center',
     alignItems: 'center',
   },
   rankText: {
-    color: 'white',
-    fontSize: 18,
     fontWeight: 'bold',
   },
   playerInfoContainer: {
@@ -113,43 +138,23 @@ const styles = StyleSheet.create({
     padding: 16,
   },
   playerName: {
-    fontSize: 18,
     fontWeight: '500',
   },
   scoreText: {
-    fontSize: 22,
     fontWeight: 'bold',
   },
   statsContainer: {
-    backgroundColor: '#f0f0f0',
-    borderRadius: 8,
-    padding: 16,
     marginBottom: 16,
   },
   statsTitle: {
-    fontSize: 18,
-    fontWeight: 'bold',
     marginBottom: 8,
-  },
-  statsText: {
-    color: '#555',
   },
   buttonContainer: {
     flexDirection: 'row',
-    justifyContent: 'space-between',
+    marginBottom: 16,
   },
   button: {
     flex: 1,
-    backgroundColor: '#007AFF',
-    paddingVertical: 14,
-    borderRadius: 8,
-    marginHorizontal: 6,
-    alignItems: 'center',
-  },
-  buttonText: {
-    color: 'white',
-    fontSize: 16,
-    fontWeight: '600',
   },
 });
 

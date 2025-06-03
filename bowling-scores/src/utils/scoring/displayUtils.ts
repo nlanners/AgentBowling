@@ -22,8 +22,13 @@ export function formatRoll(
 ): string {
   if (!roll) return '';
 
-  // Strike
+  // Strike on first roll
   if (rollIndex === 0 && roll.pinsKnocked === 10) {
+    return 'X';
+  }
+
+  // Strike on second roll in 10th frame
+  if (frameIndex === 9 && rollIndex === 1 && roll.pinsKnocked === 10) {
     return 'X';
   }
 
@@ -306,14 +311,20 @@ export function canKnockDownPins(game: Game, pinsToKnock: number): boolean {
     if (frame.rolls.length === 2) {
       // Only allowed a third roll if first was strike or frame is spare
       if (frame.isStrike || frame.isSpare) {
-        // If previous roll was a strike, any valid roll is allowed
-        if (frame.rolls[1].pinsKnocked === 10) {
+        // If first roll was a strike and second roll was a strike, any valid roll is allowed
+        if (
+          frame.rolls[0].pinsKnocked === 10 &&
+          frame.rolls[1].pinsKnocked === 10
+        ) {
           return pinsToKnock <= 10;
         }
 
         // If first roll was a strike but second wasn't,
         // ensure the sum of second and third doesn't exceed 10
-        if (frame.isStrike && frame.rolls[1].pinsKnocked !== 10) {
+        if (
+          frame.rolls[0].pinsKnocked === 10 &&
+          frame.rolls[1].pinsKnocked < 10
+        ) {
           return frame.rolls[1].pinsKnocked + pinsToKnock <= 10;
         }
 

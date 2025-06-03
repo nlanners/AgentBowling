@@ -1,5 +1,14 @@
-import React from 'react';
-import { View, StyleSheet, ScrollView } from 'react-native';
+import React, { useRef, useEffect } from 'react';
+import {
+  View,
+  StyleSheet,
+  ScrollView,
+  LayoutChangeEvent,
+  findNodeHandle,
+  NativeSyntheticEvent,
+  NativeScrollEvent,
+  Dimensions,
+} from 'react-native';
 import { Frame, Player } from '../../types';
 import { Typography, Badge } from '../ui';
 import FrameCell from './FrameCell';
@@ -12,6 +21,8 @@ export interface PlayerRowProps {
   playerIndex: number;
   currentFrameIndex: number;
   isGameComplete?: boolean;
+  onScroll?: (event: NativeSyntheticEvent<NativeScrollEvent>) => void;
+  scrollViewRef?: (ref: ScrollView | null) => void;
 }
 
 /**
@@ -24,15 +35,67 @@ const PlayerRow: React.FC<PlayerRowProps> = ({
   playerIndex,
   currentFrameIndex,
   isGameComplete = false,
+  onScroll,
+  scrollViewRef,
 }) => {
   const { theme } = useTheme();
   const isCurrentPlayer = currentPlayerIndex === playerIndex;
+  const internalScrollViewRef = useRef<ScrollView>(null);
+  const frameRefs = useRef<View[]>([]);
+  const screenWidth = Dimensions.get('window').width;
+  const playerNameWidth = 100; // Width of player name column
+
+  // Combine refs - use both the internal ref and the one passed from parent
+  useEffect(() => {
+    if (scrollViewRef && internalScrollViewRef.current) {
+      scrollViewRef(internalScrollViewRef.current);
+    }
+  }, [scrollViewRef]);
 
   // Get total score
   const totalScore =
     frames.length > 0 && frames[frames.length - 1]
       ? frames[frames.length - 1].cumulativeScore
       : 0;
+
+  // Scroll to the current frame when it changes or when this becomes the current player
+  useEffect(() => {
+    if (isCurrentPlayer && !isGameComplete && internalScrollViewRef.current) {
+      // Calculate frame widths (standard frames are 44px, 10th frame is 64px)
+      const frameWidth = 44; // Default frame width with margins
+      const tenthFrameWidth = 64; // 10th frame is wider
+
+      // Calculate the available width for frames (screen width minus player name column)
+      const availableWidth = screenWidth - playerNameWidth;
+
+      // Calculate the offset to the current frame
+      let offset = 0;
+      for (let i = 0; i < currentFrameIndex; i++) {
+        offset += i === 9 ? tenthFrameWidth : frameWidth;
+      }
+
+      // Calculate the center position to ensure the frame is fully visible
+      // Add a bit of extra padding (20px) to better center the current frame
+      const centerOffset = Math.max(
+        0,
+        offset - availableWidth / 2 + frameWidth / 2 + 20
+      );
+
+      // Ensure we don't scroll beyond the content
+      const scrollToOffset = Math.min(centerOffset, 440); // 440 is approx max scroll (10 frames * ~44px)
+
+      // Use setTimeout to ensure the scroll happens after render
+      // Use a longer timeout to ensure the component has fully rendered
+      setTimeout(() => {
+        if (internalScrollViewRef.current) {
+          internalScrollViewRef.current.scrollTo({
+            x: scrollToOffset,
+            animated: true,
+          });
+        }
+      }, 300);
+    }
+  }, [currentFrameIndex, isCurrentPlayer, isGameComplete, screenWidth]);
 
   return (
     <View style={styles.container}>
@@ -67,30 +130,48 @@ const PlayerRow: React.FC<PlayerRowProps> = ({
 
       {/* Frames */}
       <ScrollView
+        ref={internalScrollViewRef}
         horizontal
         showsHorizontalScrollIndicator={false}
-        contentContainerStyle={styles.framesContainer}>
+        contentContainerStyle={styles.framesContainer}
+        onScroll={onScroll}
+        scrollEventThrottle={16}>
         {frames.map((frame, index) => (
-          <FrameCell
+          <View
             key={`frame-${playerIndex}-${index}`}
-            frame={frame}
-            frameIndex={index}
-            isCurrentFrame={isCurrentPlayer && currentFrameIndex === index}
-            isComplete={isGameComplete}
-          />
+            ref={(ref) => {
+              if (ref) {
+                frameRefs.current[index] = ref;
+              }
+            }}>
+            <FrameCell
+              frame={frame}
+              frameIndex={index}
+              isCurrentFrame={isCurrentPlayer && currentFrameIndex === index}
+              isComplete={isGameComplete}
+            />
+          </View>
         ))}
 
         {/* Add placeholders if less than 10 frames */}
         {Array.from({ length: Math.max(0, 10 - frames.length) }).map(
-          (_, index) => (
-            <View
-              key={`placeholder-${playerIndex}-${index}`}
-              style={[
-                styles.placeholderFrame,
-                index === 9 && styles.tenthPlaceholderFrame,
-              ]}
-            />
-          )
+          (_, index) => {
+            const frameIndex = frames.length + index;
+            return (
+              <View
+                key={`placeholder-${playerIndex}-${index}`}
+                ref={(ref) => {
+                  if (ref) {
+                    frameRefs.current[frameIndex] = ref;
+                  }
+                }}
+                style={[
+                  styles.placeholderFrame,
+                  frameIndex === 9 && styles.tenthPlaceholderFrame,
+                ]}
+              />
+            );
+          }
         )}
       </ScrollView>
     </View>

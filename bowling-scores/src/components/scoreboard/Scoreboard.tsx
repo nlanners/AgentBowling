@@ -1,5 +1,11 @@
-import React from 'react';
-import { View, StyleSheet, ScrollView } from 'react-native';
+import React, { useRef } from 'react';
+import {
+  View,
+  StyleSheet,
+  ScrollView,
+  NativeSyntheticEvent,
+  NativeScrollEvent,
+} from 'react-native';
 import { Game } from '../../types';
 import { Typography, Card } from '../ui';
 import PlayerRow from './PlayerRow';
@@ -15,6 +21,35 @@ export interface ScoreboardProps {
 const Scoreboard: React.FC<ScoreboardProps> = ({ game }) => {
   const { theme } = useTheme();
   const { players, frames, currentPlayer, currentFrame, isComplete } = game;
+  const headerScrollViewRef = useRef<ScrollView>(null);
+  const playerScrollViewRefs = useRef<ScrollView[]>([]);
+
+  // Function to sync all ScrollViews when one is scrolled
+  const handleScroll = (event: NativeSyntheticEvent<NativeScrollEvent>) => {
+    const scrollX = event.nativeEvent.contentOffset.x;
+
+    // Sync header ScrollView
+    if (headerScrollViewRef.current) {
+      headerScrollViewRef.current.scrollTo({ x: scrollX, animated: false });
+    }
+
+    // Sync all player ScrollViews
+    playerScrollViewRefs.current.forEach((scrollRef) => {
+      if (scrollRef) {
+        scrollRef.scrollTo({ x: scrollX, animated: false });
+      }
+    });
+  };
+
+  // Register player ScrollView refs
+  const registerPlayerScrollViewRef = (
+    index: number,
+    ref: ScrollView | null
+  ) => {
+    if (ref) {
+      playerScrollViewRefs.current[index] = ref;
+    }
+  };
 
   return (
     <Card style={styles.container}>
@@ -29,9 +64,11 @@ const Scoreboard: React.FC<ScoreboardProps> = ({ game }) => {
           </Typography>
         </View>
         <ScrollView
+          ref={headerScrollViewRef}
           horizontal
           showsHorizontalScrollIndicator={false}
-          contentContainerStyle={styles.framesHeader}>
+          contentContainerStyle={styles.framesHeader}
+          scrollEnabled={false}>
           {Array.from({ length: 10 }).map((_, index) => (
             <View key={`header-${index}`} style={styles.frameHeaderCell}>
               <Typography variant='caption' color={theme.colors.text.secondary}>
@@ -52,17 +89,13 @@ const Scoreboard: React.FC<ScoreboardProps> = ({ game }) => {
             playerIndex={playerIndex}
             currentFrameIndex={currentFrame}
             isGameComplete={isComplete}
+            onScroll={handleScroll}
+            scrollViewRef={(ref) =>
+              registerPlayerScrollViewRef(playerIndex, ref)
+            }
           />
         ))}
       </ScrollView>
-
-      {isComplete && (
-        <View style={styles.gameComplete}>
-          <Typography variant='body1' color={theme.colors.success}>
-            Game Complete
-          </Typography>
-        </View>
-      )}
     </Card>
   );
 };
@@ -94,12 +127,6 @@ const styles = StyleSheet.create({
     width: 40,
     alignItems: 'center',
     marginHorizontal: 2,
-  },
-  gameComplete: {
-    padding: 16,
-    alignItems: 'center',
-    borderTopWidth: 1,
-    borderTopColor: '#e0e0e0',
   },
 });
 

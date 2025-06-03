@@ -56,6 +56,8 @@ const FrameCell: React.FC<FrameCellProps> = ({
         <View style={styles.rollCell}>
           {frame.rolls.length > 1 && rollDisplays[1] === '/' ? (
             <Badge variant='spare' size='small' />
+          ) : frame.rolls.length > 1 && rollDisplays[1] === 'X' ? (
+            <Badge variant='strike' size='small' />
           ) : (
             <Typography variant='body2'>
               {frame.rolls.length > 1 ? rollDisplays[1] : ''}
