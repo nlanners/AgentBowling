@@ -115,6 +115,16 @@ export const createCommonStyles = () => {
       marginVertical: spacing.sm,
       ...shadows.sm,
     },
+    outlineButton: {
+      backgroundColor: 'transparent',
+      borderRadius: borderRadius.md,
+      borderWidth: 1,
+      borderColor: colors.primary.main,
+      padding: spacing.md,
+      alignItems: 'center',
+      justifyContent: 'center',
+      marginVertical: spacing.sm,
+    },
     textButton: {
       padding: spacing.sm,
       alignItems: 'center',

@@ -9,140 +9,166 @@ import {
 } from 'react-native';
 import { useTheme } from '../../contexts/ThemeContext';
 
-// Define icon types
+// Icon names supported by the Icon component
 export type IconName =
-  // Bowling specific icons
-  | 'pin'
-  | 'strike'
-  | 'spare'
-  | 'ball'
-  // UI icons
   | 'add'
-  | 'remove'
-  | 'edit'
-  | 'delete'
-  | 'save'
-  | 'close'
+  | 'arrow-down'
+  | 'arrow-up'
+  | 'arrow-up-right'
+  | 'award'
+  | 'activity'
+  | 'alert-circle'
   | 'back'
-  | 'settings'
-  | 'history'
-  | 'person'
-  | 'info'
+  | 'bar-chart'
+  | 'calendar'
   | 'check'
-  | 'error';
+  | 'check-circle'
+  | 'close'
+  | 'delete'
+  | 'edit'
+  | 'error'
+  | 'filter'
+  | 'filter-off'
+  | 'history'
+  | 'home'
+  | 'info'
+  | 'menu'
+  | 'person'
+  | 'pin'
+  | 'play'
+  | 'refresh'
+  | 'remove'
+  | 'save'
+  | 'settings'
+  | 'share'
+  | 'spare'
+  | 'star'
+  | 'stats'
+  | 'strike'
+  | 'trash'
+  | 'trending-up'
+  | 'trophy'
+  | 'users';
 
-export type IconSize = 'small' | 'medium' | 'large' | number;
+// Icon sizes
+export type IconSize = 'small' | 'medium' | 'large';
 
-export interface IconProps {
+// Size mapping for different icon sizes
+const sizeMap: Record<IconSize, number> = {
+  small: 16,
+  medium: 24,
+  large: 32,
+};
+
+// Props for the Icon component
+interface IconProps {
   name: IconName;
   size?: IconSize;
   color?: string;
   style?: StyleProp<ViewStyle>;
-  textStyle?: StyleProp<TextStyle>;
 }
 
 /**
- * Simple text-based icon component
- *
- * Note: This is a placeholder implementation. In a production app,
- * we would use a proper icon library like:
- * - @expo/vector-icons
- * - react-native-vector-icons
- *
- * This implementation uses text characters as a simplified approach
+ * Simple text-based icon component for easy compatibility
  */
-const Icon: React.FC<IconProps> = ({
-  name,
-  size = 'medium',
-  color,
-  style,
-  textStyle,
-}) => {
+const Icon: React.FC<IconProps> = ({ name, size = 'medium', color, style }) => {
   const { theme } = useTheme();
+  const iconColor = color || theme.colors.text.primary;
+  const iconSize = sizeMap[size];
 
-  // Get icon content based on name
-  const getIconContent = (): string => {
+  // Get the appropriate icon character
+  const getIconChar = (): string => {
     switch (name) {
-      // Bowling specific icons
-      case 'pin':
-        return '🎳';
-      case 'strike':
-        return 'X';
-      case 'spare':
-        return '/';
-      case 'ball':
-        return '⚫';
-      // UI icons
       case 'add':
         return '+';
-      case 'remove':
-        return '-';
-      case 'edit':
-        return '✎';
-      case 'delete':
-        return '🗑';
-      case 'save':
-        return '💾';
-      case 'close':
-        return '✕';
+      case 'arrow-down':
+        return '↓';
+      case 'arrow-up':
+        return '↑';
+      case 'arrow-up-right':
+        return '↗';
+      case 'award':
+        return '🏆';
+      case 'activity':
+        return '📊';
+      case 'alert-circle':
+        return '⚠️';
       case 'back':
         return '←';
-      case 'settings':
-        return '⚙';
-      case 'history':
-        return '📋';
-      case 'person':
-        return '👤';
-      case 'info':
-        return 'ℹ';
+      case 'bar-chart':
+        return '📊';
+      case 'calendar':
+        return '📅';
       case 'check':
         return '✓';
+      case 'check-circle':
+        return '✓';
+      case 'close':
+        return '✕';
+      case 'delete':
+        return '🗑️';
+      case 'edit':
+        return '✏️';
       case 'error':
-        return '!';
+        return '❗';
+      case 'filter':
+        return '🔍';
+      case 'filter-off':
+        return '🔍';
+      case 'history':
+        return '🕒';
+      case 'home':
+        return '🏠';
+      case 'info':
+        return 'ℹ️';
+      case 'menu':
+        return '☰';
+      case 'person':
+        return '👤';
+      case 'pin':
+        return '📌';
+      case 'play':
+        return '▶️';
+      case 'refresh':
+        return '🔄';
+      case 'remove':
+        return '-';
+      case 'save':
+        return '💾';
+      case 'settings':
+        return '⚙️';
+      case 'share':
+        return '↗️';
+      case 'spare':
+        return '/';
+      case 'star':
+        return '⭐';
+      case 'stats':
+        return '📈';
+      case 'strike':
+        return 'X';
+      case 'trash':
+        return '🗑️';
+      case 'trending-up':
+        return '📈';
+      case 'trophy':
+        return '🏆';
+      case 'users':
+        return '👥';
       default:
         return '';
     }
   };
 
-  // Get size in pixels
-  const getSizePx = (): number => {
-    if (typeof size === 'number') {
-      return size;
-    }
-
-    switch (size) {
-      case 'small':
-        return 16;
-      case 'medium':
-        return 24;
-      case 'large':
-        return 32;
-      default:
-        return 24;
-    }
-  };
-
-  // Get color from theme or props
-  const getColor = (): string => {
-    if (color) return color;
-
-    return theme.colors.text.primary;
-  };
-
   return (
     <View style={[styles.container, style]}>
       <Text
-        style={[
-          styles.icon,
-          {
-            fontSize: getSizePx(),
-            color: getColor(),
-          },
-          textStyle,
-        ]}
-        accessibilityLabel={name}
-        accessibilityRole='image'>
-        {getIconContent()}
+        style={{
+          fontSize: iconSize,
+          color: iconColor,
+          textAlign: 'center',
+        }}>
+        {getIconChar()}
       </Text>
     </View>
   );
@@ -152,9 +178,6 @@ const styles = StyleSheet.create({
   container: {
     alignItems: 'center',
     justifyContent: 'center',
-  },
-  icon: {
-    textAlign: 'center',
   },
 });
 

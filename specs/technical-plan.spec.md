@@ -85,19 +85,44 @@ The development will be organized into the following phases:
 
 - [x] Implement game history storage
 - [x] Create history viewing interface
-- [ ] Develop basic statistics calculations
-- [ ] Build statistics display components
+- [x] Develop comprehensive statistics calculations
+  - [x] Basic statistics (games played, high/low scores, averages)
+  - [x] Frame statistics (strike/spare percentages, frame-by-frame performance)
+  - [x] Trend analysis (score improvement, consistency, recent performance)
+  - [x] Roll statistics (first/second roll averages, pin distribution)
+- [x] Build statistics display components
+- [x] Create enhanced StatisticsScreen with comprehensive data presentation
+- [x] Implement efficient statistics storage service with caching
 
 **Deliverables**:
 
 - [x] History tracking and display
-- [ ] Statistics calculation and presentation
+- [x] Complete statistics calculation and presentation system
+- [x] Enhanced UI components for displaying statistical data
 
-### Phase 5: Finalization and Polish
+### Phase 5: Visual Charts and Data Visualization
 
 **Tasks**:
 
-- [ ] Implement remaining features
+- [x] Install and configure React Native Chart Kit
+- [x] Create ScoreTrendChart component for line chart visualization
+- [x] Create FramePerformanceChart component for bar chart visualization
+- [x] Create PinDistributionChart component for pie chart visualization
+- [x] Integrate chart components into StatisticsScreen
+- [x] Implement responsive chart sizing and theming
+- [x] Handle chart data formatting and edge cases
+
+**Deliverables**:
+
+- [x] Complete visual chart system with multiple chart types
+- [x] Enhanced StatisticsScreen with visual data representation
+- [x] Responsive and themed chart components
+
+### Phase 6: Finalization and Polish
+
+**Tasks**:
+
+- [ ] Complete unit test coverage for all utility functions
 - [ ] Add error handling throughout the app
 - [ ] Optimize performance
 - [x] Implement testing infrastructure
@@ -109,6 +134,7 @@ The development will be organized into the following phases:
 - [ ] Complete, polished application
 - [ ] Bug-free experience
 - [ ] Optimized performance
+- [x] Comprehensive test suite
 
 ## Directory Structure
 

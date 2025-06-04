@@ -21,11 +21,12 @@ describe('Storage Service Tests', () => {
       const game: Game = {
         id: '1',
         date: '2025-05-29',
-        players: [{ id: '1', name: 'Player 1' }],
+        players: [{ id: '1', name: 'Player 1', frames: [], score: 0 }],
         frames: [],
         currentPlayer: 0,
         currentFrame: 0,
         isComplete: false,
+        completed: false,
       };
 
       StorageService.saveCurrentGame(game);
@@ -42,11 +43,12 @@ describe('Storage Service Tests', () => {
       const game: Game = {
         id: '1',
         date: '2025-05-29',
-        players: [{ id: '1', name: 'Player 1' }],
+        players: [{ id: '1', name: 'Player 1', frames: [], score: 0 }],
         frames: [],
         currentPlayer: 0,
         currentFrame: 0,
         isComplete: false,
+        completed: false,
       };
 
       // Force an error
@@ -66,11 +68,12 @@ describe('Storage Service Tests', () => {
       const game: Game = {
         id: '1',
         date: '2025-05-29',
-        players: [{ id: '1', name: 'Player 1' }],
+        players: [{ id: '1', name: 'Player 1', frames: [], score: 0 }],
         frames: [],
         currentPlayer: 0,
         currentFrame: 0,
         isComplete: false,
+        completed: false,
       };
 
       // Store a game first
@@ -159,11 +162,12 @@ describe('Storage Service Tests', () => {
       const game: Game = {
         id: '1',
         date: '2025-05-29',
-        players: [{ id: '1', name: 'Player 1' }],
+        players: [{ id: '1', name: 'Player 1', frames: [], score: 0 }],
         frames: [],
         currentPlayer: 0,
         currentFrame: 0,
         isComplete: true,
+        completed: true,
         scores: [300],
       };
 
@@ -172,11 +176,12 @@ describe('Storage Service Tests', () => {
           {
             id: '0',
             date: '2025-05-28',
-            players: [{ id: '1', name: 'Player 1' }],
+            players: [{ id: '1', name: 'Player 1', frames: [], score: 0 }],
             frames: [],
             currentPlayer: 0,
             currentFrame: 9,
             isComplete: true,
+            completed: true,
             scores: [250],
           },
         ],
@@ -203,11 +208,12 @@ describe('Storage Service Tests', () => {
       const game: Game = {
         id: '1',
         date: '2025-05-29',
-        players: [{ id: '1', name: 'Player 1' }],
+        players: [{ id: '1', name: 'Player 1', frames: [], score: 0 }],
         frames: [],
         currentPlayer: 0,
         currentFrame: 0,
         isComplete: true,
+        completed: true,
         scores: [300],
       };
 
@@ -234,11 +240,12 @@ describe('Storage Service Tests', () => {
           {
             id: '1',
             date: '2025-05-29',
-            players: [{ id: '1', name: 'Player 1' }],
+            players: [{ id: '1', name: 'Player 1', frames: [], score: 0 }],
             frames: [],
             currentPlayer: 0,
             currentFrame: 9,
             isComplete: true,
+            completed: true,
             scores: [300],
           },
         ],

@@ -83,6 +83,7 @@ export function addRoll(game: Game, pinsKnocked: number): Game {
 
   // Check if the game is complete
   updatedGame.isComplete = isGameComplete(updatedGame);
+  updatedGame.completed = updatedGame.isComplete;
 
   // Update final scores if the game is complete
   if (updatedGame.isComplete) {
@@ -200,6 +201,7 @@ export function createNewGame(players: Game['players']): Game {
     currentFrame: 0,
     currentPlayer: 0,
     isComplete: false,
+    completed: false,
   };
 
   return initializeGameFrames(game);

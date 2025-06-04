@@ -16,6 +16,8 @@ import {
   GameValidationHelper,
   ValidationError,
 } from '../utils/validation/gameValidationHelper';
+import * as HistoryStorage from '../services/storage/history';
+import { STORAGE_KEYS, setValue } from '../services/storage/mmkvStorage';
 
 // Game action types
 export enum GameActionType {
@@ -49,6 +51,7 @@ interface GameContextType extends GameContextState {
   isGameOver: () => boolean;
   getCurrentPlayer: () => Player | undefined;
   getCurrentFrameIndex: () => number;
+  saveGameToHistory: () => Promise<boolean>;
 }
 
 // Initial state
@@ -251,6 +254,34 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({
     return state.game.currentFrame;
   }, [state.game]);
 
+  // Add a function to save the current game to history
+  const saveGameToHistory = async (): Promise<boolean> => {
+    if (!state.game) {
+      console.error('Cannot save game to history: No active game');
+      return false;
+    }
+
+    try {
+      // Make sure the game has a date
+      if (!state.game.date) {
+        state.game.date = new Date().toISOString();
+      }
+
+      // Save to storage using the history service
+      const success = await HistoryStorage.saveGame(state.game);
+
+      if (success) {
+        // Also save this as the most recent active game
+        setValue(STORAGE_KEYS.ACTIVE_GAME, state.game);
+      }
+
+      return success;
+    } catch (error) {
+      console.error('Error saving game to history:', error);
+      return false;
+    }
+  };
+
   // Build context value
   const contextValue = useMemo(
     () => ({
@@ -263,6 +294,7 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({
       isGameOver,
       getCurrentPlayer,
       getCurrentFrameIndex,
+      saveGameToHistory,
     }),
     [
       state,
@@ -274,6 +306,7 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({
       isGameOver,
       getCurrentPlayer,
       getCurrentFrameIndex,
+      saveGameToHistory,
     ]
   );
 

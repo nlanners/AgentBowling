@@ -8,7 +8,7 @@ import {
 } from 'react-native';
 import { RouteProp, useNavigation, useRoute } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
-import { RootStackParamList } from '../types';
+import { RootStackParamList, Player } from '../types';
 import { Scoreboard } from '../components/scoreboard';
 import { PinInput } from '../components/game';
 import { Container, Typography, Button, Card } from '../components/ui';
@@ -24,21 +24,39 @@ type GameScreenNavigationProp = NativeStackNavigationProp<
 const GameScreen: React.FC = () => {
   const navigation = useNavigation<GameScreenNavigationProp>();
   const route = useRoute<GameScreenRouteProp>();
-  const { players } = route.params;
+  const { players = [] } = route.params;
   const { game, createGame, resetGame, isGameOver } = useGame();
   const { theme } = useTheme();
 
   // Initialize a new game when component mounts
   useEffect(() => {
-    // Always reset and create a fresh game
-    resetGame();
-    createGame(players);
+    if (players.length > 0) {
+      // Always reset and create a fresh game
+      resetGame();
+      // Convert PlayerState to Player objects before creating the game
+      const playerObjects: Player[] = players.map((player) => ({
+        id: player.id,
+        name: player.name,
+        isActive: player.isActive,
+      }));
+      createGame(playerObjects);
+    }
   }, [players, createGame, resetGame]);
 
   // Handle navigating to game summary
   const handleEndGame = () => {
     if (game && isGameOver()) {
-      navigation.navigate('GameSummary', { players });
+      // Ensure players is not undefined before navigating
+      if (game.players) {
+        // Convert Players to PlayerState objects
+        const playerStates = game.players.map((player) => ({
+          ...player,
+          frames: player.frames || [],
+          score: typeof player.score === 'number' ? player.score : 0,
+        }));
+
+        navigation.navigate('GameSummary', { players: playerStates });
+      }
     } else {
       Alert.alert(
         'End Game',
@@ -62,7 +80,17 @@ const GameScreen: React.FC = () => {
 
   // Handle viewing game summary
   const handleViewSummary = () => {
-    navigation.navigate('GameSummary', { players });
+    // Ensure players is not undefined before navigating
+    if (game && game.players) {
+      // Convert Players to PlayerState objects
+      const playerStates = game.players.map((player) => ({
+        ...player,
+        frames: player.frames || [],
+        score: typeof player.score === 'number' ? player.score : 0,
+      }));
+
+      navigation.navigate('GameSummary', { players: playerStates });
+    }
   };
 
   if (!game) {
@@ -81,7 +109,7 @@ const GameScreen: React.FC = () => {
         <View style={styles.header}>
           <Typography variant='h3'>Frame {game.currentFrame + 1}</Typography>
           <Typography variant='body1'>
-            {players[game.currentPlayer].name}'s turn
+            {game.players[game.currentPlayer].name}'s turn
           </Typography>
         </View>
 

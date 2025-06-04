@@ -10,4 +10,10 @@ export interface Player {
 
   /** Boolean indicating if the player is currently active */
   isActive?: boolean;
+
+  /** Player's score in the current game */
+  score?: number;
+
+  /** Player's frames in the current game */
+  frames?: import('./frame').Frame[];
 }

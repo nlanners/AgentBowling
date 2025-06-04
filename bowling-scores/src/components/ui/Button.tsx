@@ -5,11 +5,13 @@ import {
   StyleSheet,
   TouchableOpacityProps,
   ActivityIndicator,
+  View,
 } from 'react-native';
 import { useTheme } from '../../contexts/ThemeContext';
 import createCommonStyles from '../../theme/styles';
+import Icon, { IconName } from './Icon';
 
-type ButtonVariant = 'primary' | 'secondary' | 'text';
+type ButtonVariant = 'primary' | 'secondary' | 'text' | 'outline' | 'error';
 type ButtonSize = 'small' | 'medium' | 'large';
 
 export interface ButtonProps extends TouchableOpacityProps {
@@ -17,6 +19,7 @@ export interface ButtonProps extends TouchableOpacityProps {
   size?: ButtonSize;
   isLoading?: boolean;
   fullWidth?: boolean;
+  leftIcon?: IconName;
   children: React.ReactNode;
 }
 
@@ -25,6 +28,7 @@ const Button: React.FC<ButtonProps> = ({
   size = 'medium',
   isLoading = false,
   fullWidth = false,
+  leftIcon,
   children,
   style,
   disabled,
@@ -42,6 +46,22 @@ const Button: React.FC<ButtonProps> = ({
         return commonStyles.secondaryButton;
       case 'text':
         return commonStyles.textButton;
+      case 'outline':
+        return (
+          commonStyles.outlineButton || {
+            backgroundColor: 'transparent',
+            borderWidth: 1,
+            borderColor: theme.colors.primary.main,
+          }
+        );
+      case 'error':
+        return {
+          backgroundColor: theme.colors.error,
+          borderRadius: theme.borderRadius.md,
+          flexDirection: 'row' as const,
+          justifyContent: 'center' as const,
+          alignItems: 'center' as const,
+        };
       default:
         return commonStyles.primaryButton;
     }
@@ -55,6 +75,16 @@ const Button: React.FC<ButtonProps> = ({
         return commonStyles.buttonText;
       case 'text':
         return commonStyles.textButtonText;
+      case 'outline':
+        return {
+          ...commonStyles.textButtonText,
+          color: theme.colors.primary.main,
+        };
+      case 'error':
+        return {
+          ...commonStyles.buttonText,
+          color: theme.colors.common.white,
+        };
       default:
         return commonStyles.buttonText;
     }
@@ -74,6 +104,33 @@ const Button: React.FC<ButtonProps> = ({
     }
   };
 
+  // Get icon color based on variant
+  const getIconColor = () => {
+    switch (variant) {
+      case 'primary':
+        return theme.colors.common.white;
+      case 'secondary':
+        return theme.colors.common.white;
+      case 'text':
+        return theme.colors.primary.main;
+      default:
+        return theme.colors.common.white;
+    }
+  };
+
+  // Get icon size based on button size
+  const getIconSize = (): 'small' | 'medium' => {
+    switch (size) {
+      case 'small':
+        return 'small';
+      case 'medium':
+      case 'large':
+        return 'medium';
+      default:
+        return 'small';
+    }
+  };
+
   return (
     <TouchableOpacity
       style={[
@@ -81,6 +138,7 @@ const Button: React.FC<ButtonProps> = ({
         getPaddingStyle(),
         fullWidth && styles.fullWidth,
         disabled && styles.disabled,
+        leftIcon && styles.withIcon,
         style,
       ]}
       disabled={disabled || isLoading}
@@ -95,9 +153,19 @@ const Button: React.FC<ButtonProps> = ({
           }
         />
       ) : (
-        <Text style={[getTextStyle(), disabled && styles.disabledText]}>
-          {children}
-        </Text>
+        <View style={styles.contentContainer}>
+          {leftIcon && (
+            <Icon
+              name={leftIcon}
+              size={getIconSize()}
+              color={getIconColor()}
+              style={styles.leftIcon}
+            />
+          )}
+          <Text style={[getTextStyle(), disabled && styles.disabledText]}>
+            {children}
+          </Text>
+        </View>
       )}
     </TouchableOpacity>
   );
@@ -124,6 +192,18 @@ const styles = StyleSheet.create({
   },
   disabledText: {
     opacity: 0.8,
+  },
+  withIcon: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  contentContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  leftIcon: {
+    marginRight: 8,
   },
 });
 

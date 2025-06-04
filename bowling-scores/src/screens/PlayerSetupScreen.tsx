@@ -57,7 +57,14 @@ const PlayerSetupScreen: React.FC = () => {
       return;
     }
 
-    navigation.navigate('Game', { players });
+    // Convert Player[] to PlayerState[] by adding frames and score properties
+    const playerStates = players.map((player) => ({
+      ...player,
+      frames: [],
+      score: 0,
+    }));
+
+    navigation.navigate('Game', { players: playerStates });
   };
 
   const renderPlayerItem = ({ item }: { item: Player }) => (

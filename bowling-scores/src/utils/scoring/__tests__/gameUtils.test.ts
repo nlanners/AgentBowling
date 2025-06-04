@@ -41,6 +41,7 @@ describe('Game Utils Tests', () => {
         currentPlayer: 0,
         currentFrame: 0,
         isComplete: false,
+        completed: false,
       };
 
       const initializedGame = initializeGameFrames(game);
@@ -75,6 +76,7 @@ describe('Game Utils Tests', () => {
         currentPlayer: 0,
         currentFrame: 0,
         isComplete: false,
+        completed: false,
       };
 
       const initializedGame = initializeGameFrames(game);
@@ -96,6 +98,7 @@ describe('Game Utils Tests', () => {
         currentPlayer: 0,
         currentFrame: 0,
         isComplete: false,
+        completed: false,
       };
 
       const initializedGame = initializeGameFrames(game);
@@ -121,6 +124,7 @@ describe('Game Utils Tests', () => {
         currentPlayer: 0,
         currentFrame: 0,
         isComplete: false,
+        completed: false,
       };
 
       let gameState = initializeGameFrames(game);
@@ -148,6 +152,7 @@ describe('Game Utils Tests', () => {
         currentPlayer: 0,
         currentFrame: 0,
         isComplete: false,
+        completed: false,
       };
 
       let gameState = initializeGameFrames(game);
@@ -179,6 +184,7 @@ describe('Game Utils Tests', () => {
         currentPlayer: 0,
         currentFrame: 9, // 10th frame (0-based index)
         isComplete: false,
+        completed: false,
       };
 
       let gameState = initializeGameFrames(game);

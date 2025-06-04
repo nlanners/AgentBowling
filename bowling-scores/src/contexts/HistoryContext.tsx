@@ -6,57 +6,25 @@
 import React, {
   createContext,
   useContext,
-  useReducer,
+  useState,
+  useEffect,
   useMemo,
   useCallback,
 } from 'react';
 import { Game } from '../types';
 import { MMKV } from 'react-native-mmkv';
+import * as StatisticsStorage from '../services/storage/statistics';
+import * as HistoryStorage from '../services/storage/history';
 
-// Storage key for game history
-const HISTORY_STORAGE_KEY = 'BowlingApp.GameHistory';
-
-// Storage instance for persisting game history
-let storage: MMKV | null = null;
-
-try {
-  storage = new MMKV({
-    id: 'bowling-app-storage',
-  });
-} catch (error) {
-  console.error('Failed to initialize MMKV storage:', error);
-  // Provide a fallback if MMKV fails to initialize
-  storage = null;
-}
-
-// History action types
+// History action types enum
 export enum HistoryActionType {
+  SET_GAMES = 'SET_GAMES',
   ADD_GAME = 'ADD_GAME',
-  REMOVE_GAME = 'REMOVE_GAME',
+  UPDATE_GAME = 'UPDATE_GAME',
+  DELETE_GAME = 'DELETE_GAME',
   CLEAR_HISTORY = 'CLEAR_HISTORY',
-}
-
-// History actions interface
-type HistoryAction =
-  | { type: HistoryActionType.ADD_GAME; payload: { game: Game } }
-  | { type: HistoryActionType.REMOVE_GAME; payload: { gameId: string } }
-  | { type: HistoryActionType.CLEAR_HISTORY };
-
-// History context state interface
-interface HistoryContextState {
-  gameHistory: Game[];
-  isLoading: boolean;
-  error: string | null;
-}
-
-// History context interface
-interface HistoryContextType extends HistoryContextState {
-  addGameToHistory: (game: Game) => void;
-  removeGameFromHistory: (gameId: string) => void;
-  clearHistory: () => void;
-  getGameById: (gameId: string) => Game | undefined;
-  getPlayerGameHistory: (playerId: string) => Game[];
-  getPlayerStatistics: (playerId: string) => PlayerStatistics;
+  SET_LOADING = 'SET_LOADING',
+  SET_ERROR = 'SET_ERROR',
 }
 
 // Player statistics interface
@@ -69,162 +37,152 @@ interface PlayerStatistics {
   recentScores: number[];
 }
 
-// Load game history from storage
-function loadHistoryFromStorage(): Game[] {
-  if (!storage) return [];
-
-  const storedHistory = storage.getString(HISTORY_STORAGE_KEY);
-  if (storedHistory) {
-    try {
-      return JSON.parse(storedHistory);
-    } catch (e) {
-      console.error('Failed to parse stored game history', e);
-    }
-  }
-  return [];
+// History context state interface
+interface HistoryContextState {
+  games: Game[];
+  isLoading: boolean;
+  error: string | null;
 }
 
-// Save game history to storage
-function saveHistoryToStorage(history: Game[]): void {
-  if (!storage) return;
-
-  try {
-    storage.set(HISTORY_STORAGE_KEY, JSON.stringify(history));
-  } catch (e) {
-    console.error('Failed to save game history to storage', e);
-  }
+// History context interface
+interface HistoryContextType extends HistoryContextState {
+  addGame: (game: Game) => Promise<void>;
+  updateGame: (game: Game) => Promise<void>;
+  deleteGame: (gameId: string) => Promise<void>;
+  clearHistory: () => Promise<void>;
+  getGameById: (gameId: string) => Game | undefined;
+  getPlayerGames: (playerId: string) => Game[];
+  getPlayerStatistics: (playerId: string) => PlayerStatistics;
 }
-
-// Initial state
-const initialState: HistoryContextState = {
-  gameHistory: loadHistoryFromStorage(),
-  isLoading: false,
-  error: null,
-};
 
 // Create context with default undefined value
 const HistoryContext = createContext<HistoryContextType | undefined>(undefined);
-
-// History reducer
-function historyReducer(
-  state: HistoryContextState,
-  action: HistoryAction
-): HistoryContextState {
-  switch (action.type) {
-    case HistoryActionType.ADD_GAME: {
-      const { game } = action.payload;
-
-      // Verify game is complete
-      if (!game.isComplete) {
-        return {
-          ...state,
-          error: 'Cannot add incomplete game to history',
-        };
-      }
-
-      // Add game to history
-      const updatedHistory = [...state.gameHistory, game];
-
-      // Sort by date (newest first)
-      updatedHistory.sort(
-        (a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()
-      );
-
-      // Save to storage
-      saveHistoryToStorage(updatedHistory);
-
-      return {
-        ...state,
-        gameHistory: updatedHistory,
-        error: null,
-      };
-    }
-
-    case HistoryActionType.REMOVE_GAME: {
-      const { gameId } = action.payload;
-
-      // Remove game from history
-      const updatedHistory = state.gameHistory.filter(
-        (game) => game.id !== gameId
-      );
-
-      // Save to storage
-      saveHistoryToStorage(updatedHistory);
-
-      return {
-        ...state,
-        gameHistory: updatedHistory,
-        error: null,
-      };
-    }
-
-    case HistoryActionType.CLEAR_HISTORY: {
-      // Clear storage
-      saveHistoryToStorage([]);
-
-      return {
-        ...state,
-        gameHistory: [],
-        error: null,
-      };
-    }
-
-    default:
-      return state;
-  }
-}
 
 // History provider component
 export const HistoryProvider: React.FC<{ children: React.ReactNode }> = ({
   children,
 }) => {
-  const [state, dispatch] = useReducer(historyReducer, initialState);
+  const [games, setGames] = useState<Game[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
-  // Action to add a game to history
-  const addGameToHistory = useCallback((game: Game) => {
-    dispatch({
-      type: HistoryActionType.ADD_GAME,
-      payload: { game },
-    });
+  // Load games from storage on component mount
+  useEffect(() => {
+    const loadGames = async () => {
+      setIsLoading(true);
+      try {
+        const allGames = await HistoryStorage.getAllGames();
+        setGames(allGames);
+      } catch (error) {
+        console.error('Error loading game history:', error);
+        setError('Failed to load game history');
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    loadGames();
   }, []);
 
-  // Action to remove a game from history
-  const removeGameFromHistory = useCallback((gameId: string) => {
-    dispatch({
-      type: HistoryActionType.REMOVE_GAME,
-      payload: { gameId },
-    });
-  }, []);
+  /**
+   * Add a game to history
+   */
+  const addGame = async (game: Game): Promise<void> => {
+    try {
+      await HistoryStorage.addGame(game);
+      setGames((prevGames) => [...prevGames, game]);
 
-  // Action to clear history
-  const clearHistory = useCallback(() => {
-    dispatch({
-      type: HistoryActionType.CLEAR_HISTORY,
-    });
-  }, []);
+      // Invalidate statistics cache for players in the game
+      await StatisticsStorage.updateStatisticsAfterGameChange(game);
+    } catch (error) {
+      console.error('Error adding game to history:', error);
+      setError('Failed to add game to history');
+    }
+  };
 
-  // Utility to get a game by ID
+  /**
+   * Update an existing game
+   */
+  const updateGame = async (game: Game): Promise<void> => {
+    try {
+      await HistoryStorage.updateGame(game);
+      setGames((prevGames) =>
+        prevGames.map((g) => (g.id === game.id ? game : g))
+      );
+
+      // Invalidate statistics cache for players in the game
+      await StatisticsStorage.updateStatisticsAfterGameChange(game);
+    } catch (error) {
+      console.error('Error updating game in history:', error);
+      setError('Failed to update game');
+    }
+  };
+
+  /**
+   * Delete a game from history
+   */
+  const deleteGame = async (gameId: string): Promise<void> => {
+    try {
+      const gameToDelete = games.find((game) => game.id === gameId);
+
+      await HistoryStorage.deleteGame(gameId);
+      setGames((prevGames) => prevGames.filter((g) => g.id !== gameId));
+
+      // Invalidate statistics cache if game was found
+      if (gameToDelete) {
+        await StatisticsStorage.updateStatisticsAfterGameChange(gameToDelete);
+      }
+    } catch (error) {
+      console.error('Error deleting game from history:', error);
+      setError('Failed to delete game');
+    }
+  };
+
+  /**
+   * Clear all game history
+   */
+  const clearHistory = async (): Promise<void> => {
+    try {
+      await HistoryStorage.clearAllGames();
+      setGames([]);
+
+      // Clear all statistics cache
+      StatisticsStorage.clearAllStatistics();
+    } catch (error) {
+      console.error('Error clearing game history:', error);
+      setError('Failed to clear history');
+    }
+  };
+
+  /**
+   * Get a game by ID
+   */
   const getGameById = useCallback(
-    (gameId: string) => {
-      return state.gameHistory.find((game) => game.id === gameId);
+    (gameId: string): Game | undefined => {
+      return games.find((game) => game.id === gameId);
     },
-    [state.gameHistory]
+    [games]
   );
 
-  // Utility to get games for a specific player
-  const getPlayerGameHistory = useCallback(
-    (playerId: string) => {
-      return state.gameHistory.filter((game) =>
+  /**
+   * Get games for a specific player
+   */
+  const getPlayerGames = useCallback(
+    (playerId: string): Game[] => {
+      return games.filter((game) =>
         game.players.some((player) => player.id === playerId)
       );
     },
-    [state.gameHistory]
+    [games]
   );
 
-  // Utility to calculate player statistics
+  /**
+   * Calculate player statistics
+   * Note: This is now a fallback, as we should use the cached statistics service
+   */
   const getPlayerStatistics = useCallback(
     (playerId: string): PlayerStatistics => {
-      const playerGames = getPlayerGameHistory(playerId);
+      const playerGames = getPlayerGames(playerId);
 
       if (playerGames.length === 0) {
         return {
@@ -272,7 +230,6 @@ export const HistoryProvider: React.FC<{ children: React.ReactNode }> = ({
       });
 
       // Sort scores by date (newest first) for recent scores
-      const scoresByDate = [...scores];
       const gamesByDate = [...playerGames].sort(
         (a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()
       );
@@ -305,29 +262,24 @@ export const HistoryProvider: React.FC<{ children: React.ReactNode }> = ({
         recentScores,
       };
     },
-    [getPlayerGameHistory]
+    [getPlayerGames]
   );
 
   // Build context value
   const contextValue = useMemo(
     () => ({
-      ...state,
-      addGameToHistory,
-      removeGameFromHistory,
+      games,
+      isLoading,
+      error,
+      addGame,
+      updateGame,
+      deleteGame,
       clearHistory,
       getGameById,
-      getPlayerGameHistory,
+      getPlayerGames,
       getPlayerStatistics,
     }),
-    [
-      state,
-      addGameToHistory,
-      removeGameFromHistory,
-      clearHistory,
-      getGameById,
-      getPlayerGameHistory,
-      getPlayerStatistics,
-    ]
+    [games, isLoading, error, getGameById, getPlayerGames, getPlayerStatistics]
   );
 
   return (
@@ -348,4 +300,5 @@ export const useHistory = (): HistoryContextType => {
   return context;
 };
 
+// Add default export for compatibility with existing imports
 export default HistoryProvider;
