@@ -22,5 +22,5 @@ export type { ContainerProps } from './Container';
 export type { TypographyProps, TypographyVariant } from './Typography';
 export type { InputProps } from './Input';
 export type { BadgeProps, BadgeVariant, BadgeSize } from './Badge';
-export type { IconProps, IconName, IconSize } from './Icon';
+export type { IconName, IconSize } from './Icon';
 export type { DividerProps } from './Divider';

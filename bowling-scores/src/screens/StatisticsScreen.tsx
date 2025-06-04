@@ -7,7 +7,13 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { View, StyleSheet, ScrollView, ActivityIndicator } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
-import { RootStackParamList, Game, Player, PlayerStatistics } from '../types';
+import {
+  RootStackParamList,
+  Game,
+  Player,
+  PlayerStatistics,
+  FrameNumber,
+} from '../types';
 import {
   Container,
   Typography,
@@ -17,6 +23,11 @@ import {
   Divider,
 } from '../components/ui';
 import { StatisticCard, StatisticsSection } from '../components/statistics';
+import {
+  ScoreTrendChart,
+  FramePerformanceChart,
+  PinDistributionChart,
+} from '../components/charts';
 import { useTheme } from '../contexts/ThemeContext';
 import * as HistoryStorage from '../services/storage/history';
 import * as StatisticsStorage from '../services/storage/statistics';
@@ -138,6 +149,9 @@ const StatisticsScreen: React.FC = () => {
 
   // Get current player statistics
   const currentStats = getCurrentPlayerStats();
+
+  // Frame numbers for rendering frame performance section
+  const frameNumbers: FrameNumber[] = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10];
 
   return (
     <Container>
@@ -323,15 +337,246 @@ const StatisticsScreen: React.FC = () => {
                 <StatisticsSection
                   title='Frame Performance'
                   description='How you perform in different frames'>
-                  <Card style={styles.framePerformanceCard}>
-                    <Typography
-                      variant='body2'
-                      color={theme.colors.text.secondary}>
-                      Frame-by-frame statistics will be available in a future
-                      update.
-                    </Typography>
-                  </Card>
+                  {currentStats.basic.gamesPlayed > 0 ? (
+                    <>
+                      <Typography
+                        variant='subtitle2'
+                        style={styles.framePerformanceTitle}>
+                        Frame-by-Frame Analysis
+                      </Typography>
+
+                      <ScrollView
+                        horizontal
+                        showsHorizontalScrollIndicator={true}>
+                        <View style={styles.framePerformanceTable}>
+                          {/* Table headers */}
+                          <View style={styles.frameHeaderRow}>
+                            <View style={styles.frameHeaderCell}>
+                              <Typography
+                                variant='caption'
+                                color={theme.colors.text.secondary}>
+                                Frame
+                              </Typography>
+                            </View>
+                            <View style={styles.frameHeaderCell}>
+                              <Typography
+                                variant='caption'
+                                color={theme.colors.text.secondary}>
+                                Avg. Score
+                              </Typography>
+                            </View>
+                            <View style={styles.frameHeaderCell}>
+                              <Typography
+                                variant='caption'
+                                color={theme.colors.text.secondary}>
+                                Strike %
+                              </Typography>
+                            </View>
+                            <View style={styles.frameHeaderCell}>
+                              <Typography
+                                variant='caption'
+                                color={theme.colors.text.secondary}>
+                                Spare %
+                              </Typography>
+                            </View>
+                          </View>
+
+                          {/* Table rows */}
+                          {frameNumbers.map((frameNumber) => {
+                            const framePerf =
+                              currentStats.frames.framePerformance[frameNumber];
+                            if (!framePerf) return null;
+
+                            return (
+                              <View
+                                key={frameNumber}
+                                style={styles.frameDataRow}>
+                                <View style={styles.frameDataCell}>
+                                  <Typography
+                                    variant='body2'
+                                    style={styles.frameCellText}>
+                                    {frameNumber}
+                                  </Typography>
+                                </View>
+                                <View style={styles.frameDataCell}>
+                                  <Typography
+                                    variant='body2'
+                                    style={styles.frameCellText}>
+                                    {formatNumber(framePerf.averageScore)}
+                                  </Typography>
+                                </View>
+                                <View style={styles.frameDataCell}>
+                                  <Typography
+                                    variant='body2'
+                                    style={[
+                                      styles.frameCellText,
+                                      framePerf.strikePercentage > 50
+                                        ? styles.highlightText
+                                        : null,
+                                    ]}>
+                                    {formatNumber(framePerf.strikePercentage)}%
+                                  </Typography>
+                                </View>
+                                <View style={styles.frameDataCell}>
+                                  <Typography
+                                    variant='body2'
+                                    style={[
+                                      styles.frameCellText,
+                                      framePerf.sparePercentage > 50
+                                        ? styles.highlightText
+                                        : null,
+                                    ]}>
+                                    {formatNumber(framePerf.sparePercentage)}%
+                                  </Typography>
+                                </View>
+                              </View>
+                            );
+                          })}
+                        </View>
+                      </ScrollView>
+
+                      <View style={styles.rollStatsContainer}>
+                        <Typography
+                          variant='subtitle2'
+                          style={styles.framePerformanceTitle}>
+                          Roll Statistics
+                        </Typography>
+
+                        <View style={styles.statGrid}>
+                          <View style={styles.statGridItem}>
+                            <StatisticCard
+                              label='First Roll Avg'
+                              value={formatNumber(
+                                currentStats.rolls.firstRollAverage
+                              )}
+                              icon='trending-up'
+                              explanation='Average pins knocked down on your first roll.'
+                            />
+                          </View>
+                          <View style={styles.statGridItem}>
+                            <StatisticCard
+                              label='Second Roll Avg'
+                              value={formatNumber(
+                                currentStats.rolls.secondRollAverage
+                              )}
+                              icon='trending-up'
+                              explanation='Average pins knocked down on your second roll.'
+                            />
+                          </View>
+                        </View>
+                      </View>
+
+                      <View style={styles.trendStatsContainer}>
+                        <Typography
+                          variant='subtitle2'
+                          style={styles.framePerformanceTitle}>
+                          Trend Analysis
+                        </Typography>
+
+                        <View style={styles.statGrid}>
+                          <View style={styles.statGridItem}>
+                            <StatisticCard
+                              label='Recent Trend'
+                              value={
+                                currentStats.trends.recentTrend > 0
+                                  ? `+${formatNumber(
+                                      currentStats.trends.recentTrend
+                                    )}`
+                                  : formatNumber(
+                                      currentStats.trends.recentTrend
+                                    )
+                              }
+                              icon='trending-up'
+                              accent={currentStats.trends.recentTrend > 0}
+                              explanation='Indicates if your scores are improving (positive) or declining (negative) recently.'
+                            />
+                          </View>
+                          <View style={styles.statGridItem}>
+                            <StatisticCard
+                              label='Consistency'
+                              value={formatNumber(
+                                currentStats.trends.consistencyScore
+                              )}
+                              icon='activity'
+                              explanation='A lower score indicates more consistent performance across games.'
+                            />
+                          </View>
+                          <View style={styles.statGridItem}>
+                            <StatisticCard
+                              label='Last 5 Games Avg'
+                              value={formatNumber(
+                                currentStats.trends.last5GamesAverage
+                              )}
+                              icon='bar-chart'
+                              explanation='Your average score across your 5 most recent games.'
+                            />
+                          </View>
+                          <View style={styles.statGridItem}>
+                            <StatisticCard
+                              label='Overall Improvement'
+                              value={
+                                currentStats.trends.scoreImprovement > 0
+                                  ? `+${formatNumber(
+                                      currentStats.trends.scoreImprovement
+                                    )}`
+                                  : formatNumber(
+                                      currentStats.trends.scoreImprovement
+                                    )
+                              }
+                              icon='arrow-up-right'
+                              accent={currentStats.trends.scoreImprovement > 0}
+                              explanation='The difference between your average scores in the first half of your games versus the second half.'
+                            />
+                          </View>
+                        </View>
+                      </View>
+                    </>
+                  ) : (
+                    <Card style={styles.framePerformanceCard}>
+                      <Typography
+                        variant='body2'
+                        color={theme.colors.text.secondary}>
+                        Play more games to see detailed frame-by-frame
+                        statistics.
+                      </Typography>
+                    </Card>
+                  )}
                 </StatisticsSection>
+
+                {/* Visual Charts Section */}
+                {currentStats.basic.gamesPlayed > 0 && (
+                  <>
+                    <StatisticsSection
+                      title='Score Trends'
+                      description='Visual representation of your scoring performance over time'>
+                      <ScoreTrendChart
+                        games={games}
+                        playerId={selectedPlayer!}
+                        title='Score Progression'
+                      />
+                    </StatisticsSection>
+
+                    <StatisticsSection
+                      title='Frame Performance Analysis'
+                      description='Strike and spare percentages by frame position'>
+                      <FramePerformanceChart
+                        framePerformance={currentStats.frames.framePerformance}
+                        title='Strike & Spare Rates by Frame'
+                        showStrikes={true}
+                        showSpares={true}
+                      />
+                    </StatisticsSection>
+
+                    <StatisticsSection
+                      title='Pin Distribution'
+                      description='Distribution of pins knocked down per roll'>
+                      <PinDistributionChart
+                        pinDistribution={currentStats.rolls.pinsDistribution}
+                        title='Pin Count Distribution'
+                      />
+                    </StatisticsSection>
+                  </>
+                )}
               </>
             )}
 
@@ -433,6 +678,51 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     minHeight: 100,
+  },
+  framePerformanceTitle: {
+    marginTop: 16,
+    marginBottom: 12,
+  },
+  framePerformanceTable: {
+    marginBottom: 16,
+    borderWidth: 1,
+    borderColor: '#e0e0e0',
+    borderRadius: 8,
+    overflow: 'hidden',
+  },
+  frameHeaderRow: {
+    flexDirection: 'row',
+    backgroundColor: '#f5f5f5',
+    borderBottomWidth: 1,
+    borderBottomColor: '#e0e0e0',
+  },
+  frameHeaderCell: {
+    width: 100,
+    padding: 10,
+    alignItems: 'center',
+  },
+  frameDataRow: {
+    flexDirection: 'row',
+    borderBottomWidth: 1,
+    borderBottomColor: '#e0e0e0',
+  },
+  frameDataCell: {
+    width: 100,
+    padding: 10,
+    alignItems: 'center',
+  },
+  frameCellText: {
+    textAlign: 'center',
+  },
+  highlightText: {
+    fontWeight: 'bold',
+    color: '#4caf50',
+  },
+  rollStatsContainer: {
+    marginTop: 8,
+  },
+  trendStatsContainer: {
+    marginTop: 16,
   },
   actions: {
     marginTop: 24,

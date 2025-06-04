@@ -36,12 +36,13 @@ const createPlayer = (id: string, name: string): Player => ({
 
 const createGame = (players: Player[], frames: Frame[][]): Game => ({
   id: '1',
-  date: new Date().toISOString(),
+  date: '2023-05-01',
   players,
   frames,
   currentPlayer: 0,
   currentFrame: 0,
   isComplete: false,
+  completed: false,
 });
 
 describe('Frame Utils Tests', () => {

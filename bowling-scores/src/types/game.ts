@@ -11,6 +11,9 @@ export interface Game {
   /** Date/time when the game was played */
   date: string;
 
+  /** Optional location where the game was played */
+  location?: string;
+
   /** Array of Player objects participating in the game */
   players: Player[];
 
@@ -25,6 +28,15 @@ export interface Game {
 
   /** Boolean indicating if the game is complete */
   isComplete: boolean;
+
+  /** Boolean indicating if the game is completed (alias for isComplete for compatibility) */
+  completed: boolean;
+
+  /** ID of the winning player */
+  winner?: string;
+
+  /** Notes about the game */
+  notes?: string;
 
   /** Final scores of each player (available when the game is complete) */
   scores?: number[];

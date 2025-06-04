@@ -19,6 +19,9 @@ export * from './statistics';
 // Constants
 export * from './constants';
 
+// Import Frame type for direct use
+import { Frame } from './frame';
+
 /**
  * Application Types
  */
@@ -42,52 +45,18 @@ export type RootStackParamList = {
   };
 };
 
-// Players
-export interface Player {
-  id: string;
-  name: string;
-  color?: string;
-  isActive?: boolean;
-}
-
 // Roll
 export interface Roll {
   pinsKnocked: number;
 }
 
-// Game
-export interface Game {
-  id: string;
-  date: string; // ISO date string
-  location?: string;
-  players: PlayerState[];
-  currentFrame: number;
-  completed: boolean;
-  winner?: string; // player id of the winner
-  notes?: string;
-
-  // Properties from game.ts
-  frames?: Frame[][];
-  currentPlayer?: number;
-  isComplete?: boolean;
-  scores?: number[];
-}
-
 // Player State within a Game
-export interface PlayerState extends Player {
+export interface PlayerState {
+  id: string;
+  name: string;
+  isActive?: boolean;
   frames: Frame[];
   score: number;
-}
-
-// Single Frame
-export interface Frame {
-  rolls: (number | Roll)[];
-  score?: number;
-  isStrike?: boolean;
-  isSpare?: boolean;
-  isFoul?: boolean;
-  isSplit?: boolean;
-  cumulativeScore?: number;
 }
 
 // Frame Display Data
@@ -110,36 +79,11 @@ export interface GameSettings {
   soundEffects: boolean;
 }
 
-// Statistics Types
-export interface PlayerStatistics {
-  playerId: string;
-  basic: BasicStatistics;
-  frames: FrameStatistics;
-  trends: TrendStatistics;
-}
-
-export interface BasicStatistics {
-  gamesPlayed: number;
-  highScore: number;
-  lowScore: number;
-  averageScore: number;
-  strikeCount: number;
-  spareCount: number;
-  openFrameCount: number;
-  perfectGameCount: number;
-}
-
-export interface FrameStatistics {
-  strikePercentage: number;
-  sparePercentage: number;
-  openFramePercentage: number;
-  averagePinsPerFrame: number;
-  averageFirstRoll: number;
-  averageSecondRoll: number;
-}
-
-export interface TrendStatistics {
-  frameByFrameAverage: number[];
-  scoreImprovement: number;
-  consistencyScore: number;
+// Game filter type
+export interface GameFilter {
+  startDate?: string;
+  endDate?: string;
+  playerIds?: string[];
+  minScore?: number;
+  maxScore?: number;
 }

@@ -114,6 +114,8 @@ export const calculateBasicStatistics = (
       highScore: 0,
       lowScore: 0,
       gamesPlayed: 0,
+      openFrameCount: 0,
+      perfectGameCount: 0,
     };
   }
 
@@ -127,6 +129,11 @@ export const calculateBasicStatistics = (
     (total, game) => total + calculateSpares(game.frames),
     0
   );
+  const totalOpenFrames = gameStats.reduce(
+    (total, game) => total + calculateOpenFrames(game.frames),
+    0
+  );
+  const perfectGames = gameStats.filter((game) => game.score === 300).length;
 
   return {
     averageScore: scores.reduce((sum, score) => sum + score, 0) / scores.length,
@@ -135,6 +142,8 @@ export const calculateBasicStatistics = (
     highScore: Math.max(...scores),
     lowScore: Math.min(...scores),
     gamesPlayed: gameStats.length,
+    openFrameCount: totalOpenFrames,
+    perfectGameCount: perfectGames,
   };
 };
 

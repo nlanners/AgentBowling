@@ -16,6 +16,17 @@ import { MMKV } from 'react-native-mmkv';
 import * as StatisticsStorage from '../services/storage/statistics';
 import * as HistoryStorage from '../services/storage/history';
 
+// History action types enum
+export enum HistoryActionType {
+  SET_GAMES = 'SET_GAMES',
+  ADD_GAME = 'ADD_GAME',
+  UPDATE_GAME = 'UPDATE_GAME',
+  DELETE_GAME = 'DELETE_GAME',
+  CLEAR_HISTORY = 'CLEAR_HISTORY',
+  SET_LOADING = 'SET_LOADING',
+  SET_ERROR = 'SET_ERROR',
+}
+
 // Player statistics interface
 interface PlayerStatistics {
   totalGames: number;

@@ -60,6 +60,9 @@ const styles = StyleSheet.create({
     width: '100%',
     maxWidth: 300,
   },
+  menuButton: {
+    width: '100%',
+  },
 });
 
 export default HomeScreen;

@@ -1,186 +1,176 @@
 /**
- * Statistics storage service
- * Manages caching and retrieval of player statistics
+ * Statistics Storage Service
+ * Provides functionality to save, retrieve, and manage player statistics
  */
 
-import { MMKV } from 'react-native-mmkv';
-import { Player, PlayerStatistics, Game } from '../../types';
-import { calculatePlayerStatistics } from '../../utils/statistics';
+import { Player, PlayerStatistics } from '../../types';
+import { getValue, setValue, removeValue, hasKey } from './mmkvStorage';
+import {
+  calculatePlayerStatistics,
+  calculateAllPlayersStatistics,
+} from '../../utils/statistics';
 import * as HistoryStorage from './history';
 
-// Initialize MMKV storage for statistics
-const statisticsStorage = new MMKV({
-  id: 'bowling-statistics',
-  encryptionKey: 'statistics-key',
-});
+// Statistics key prefix for individual player statistics storage
+const STATS_KEY_PREFIX = 'BowlingApp.Statistics.';
 
-// Keys for storage
-const STATS_PREFIX = 'player_stats_';
-const STATS_TIMESTAMP_PREFIX = 'player_stats_timestamp_';
-const CACHE_DURATION = 24 * 60 * 60 * 1000; // 24 hours in milliseconds
+// Statistics cache TTL in milliseconds (24 hours)
+const STATS_CACHE_TTL = 24 * 60 * 60 * 1000;
 
 /**
- * Get the storage key for a player's statistics
- */
-const getPlayerStatsKey = (playerId: string): string =>
-  `${STATS_PREFIX}${playerId}`;
-
-/**
- * Get the storage key for a player's statistics timestamp
- */
-const getPlayerStatsTimestampKey = (playerId: string): string =>
-  `${STATS_TIMESTAMP_PREFIX}${playerId}`;
-
-/**
- * Save player statistics to cache
- */
-export const savePlayerStatistics = (playerStats: PlayerStatistics): void => {
-  const playerStatsKey = getPlayerStatsKey(playerStats.playerId);
-  const timestampKey = getPlayerStatsTimestampKey(playerStats.playerId);
-
-  // Save stats and timestamp
-  statisticsStorage.set(playerStatsKey, JSON.stringify(playerStats));
-  statisticsStorage.set(timestampKey, Date.now().toString());
-};
-
-/**
- * Check if cached statistics are still valid
- */
-export const isStatsCacheValid = (playerId: string): boolean => {
-  const timestampKey = getPlayerStatsTimestampKey(playerId);
-  const timestamp = statisticsStorage.getString(timestampKey);
-
-  if (!timestamp) return false;
-
-  const cachedTime = parseInt(timestamp, 10);
-  const currentTime = Date.now();
-
-  // Check if cache is within the valid duration
-  return currentTime - cachedTime < CACHE_DURATION;
-};
-
-/**
- * Get cached player statistics if available
- */
-const getCachedPlayerStatistics = (
-  playerId: string
-): PlayerStatistics | null => {
-  // Check if valid cache exists
-  if (!isStatsCacheValid(playerId)) return null;
-
-  const playerStatsKey = getPlayerStatsKey(playerId);
-  const statsString = statisticsStorage.getString(playerStatsKey);
-
-  if (!statsString) return null;
-
-  try {
-    return JSON.parse(statsString) as PlayerStatistics;
-  } catch (error) {
-    console.error('Error parsing cached player statistics:', error);
-    return null;
-  }
-};
-
-/**
- * Calculate and cache player statistics
- */
-const calculateAndCachePlayerStatistics = async (
-  player: Player
-): Promise<PlayerStatistics> => {
-  // Get all games
-  const games = await HistoryStorage.getAllGames();
-
-  // Calculate statistics
-  const stats = calculatePlayerStatistics(games, player);
-
-  // Cache the statistics
-  savePlayerStatistics(stats);
-
-  return stats;
-};
-
-/**
- * Get player statistics, using cache when available
+ * Get player statistics from storage or calculate if not available
+ * @param player The player to get statistics for
+ * @returns Promise resolving to player statistics
  */
 export const getPlayerStatistics = async (
   player: Player
 ): Promise<PlayerStatistics> => {
-  // Try to get from cache first
-  const cachedStats = getCachedPlayerStatistics(player.id);
+  try {
+    const cacheKey = `${STATS_KEY_PREFIX}${player.id}`;
 
-  // If valid cache exists, return it
-  if (cachedStats) {
-    return cachedStats;
+    // Check if cached statistics exist and are still valid
+    const cachedStats = getValue<PlayerStatistics & { timestamp?: number }>(
+      cacheKey
+    );
+
+    if (cachedStats && cachedStats.timestamp) {
+      const now = Date.now();
+      const cacheAge = now - cachedStats.timestamp;
+
+      // Use cached stats if they're still fresh
+      if (cacheAge < STATS_CACHE_TTL) {
+        return cachedStats;
+      }
+    }
+
+    // If no valid cache exists, calculate statistics
+    const games = await HistoryStorage.getAllGames();
+    const stats = calculatePlayerStatistics(games, player);
+
+    // Add timestamp and save to cache
+    const statsWithTimestamp = {
+      ...stats,
+      timestamp: Date.now(),
+    };
+
+    setValue(cacheKey, statsWithTimestamp);
+    return stats;
+  } catch (error) {
+    console.error('Error getting player statistics:', error);
+    throw error;
   }
-
-  // Otherwise calculate and cache new stats
-  return calculateAndCachePlayerStatistics(player);
 };
 
 /**
  * Get statistics for multiple players
+ * @param players Array of players to get statistics for
+ * @returns Promise resolving to a map of player IDs to statistics
  */
 export const getMultiplePlayersStatistics = async (
   players: Player[]
 ): Promise<Map<string, PlayerStatistics>> => {
-  const statsMap = new Map<string, PlayerStatistics>();
+  try {
+    const result = new Map<string, PlayerStatistics>();
+    const playersToCalculate: Player[] = [];
 
-  // Process each player
-  await Promise.all(
-    players.map(async (player) => {
-      const stats = await getPlayerStatistics(player);
-      statsMap.set(player.id, stats);
-    })
-  );
+    // First try to get statistics from cache
+    for (const player of players) {
+      const cacheKey = `${STATS_KEY_PREFIX}${player.id}`;
+      const cachedStats = getValue<PlayerStatistics & { timestamp?: number }>(
+        cacheKey
+      );
 
-  return statsMap;
+      if (cachedStats && cachedStats.timestamp) {
+        const now = Date.now();
+        const cacheAge = now - cachedStats.timestamp;
+
+        if (cacheAge < STATS_CACHE_TTL) {
+          result.set(player.id, cachedStats);
+          continue;
+        }
+      }
+
+      // Add to list of players needing calculation
+      playersToCalculate.push(player);
+    }
+
+    // Calculate statistics for remaining players
+    if (playersToCalculate.length > 0) {
+      const games = await HistoryStorage.getAllGames();
+      const calculatedStats = calculateAllPlayersStatistics(
+        games,
+        playersToCalculate
+      );
+
+      // Save calculated statistics to cache
+      calculatedStats.forEach((stats, playerId) => {
+        const statsWithTimestamp = {
+          ...stats,
+          timestamp: Date.now(),
+        };
+
+        setValue(`${STATS_KEY_PREFIX}${playerId}`, statsWithTimestamp);
+        result.set(playerId, stats);
+      });
+    }
+
+    return result;
+  } catch (error) {
+    console.error('Error getting multiple player statistics:', error);
+    throw error;
+  }
 };
 
 /**
- * Invalidate statistics cache for a player
+ * Invalidate cached statistics for a specific player
+ * @param playerId Player ID to invalidate statistics for
  */
 export const invalidatePlayerStatsCache = (playerId: string): void => {
-  const playerStatsKey = getPlayerStatsKey(playerId);
-  const timestampKey = getPlayerStatsTimestampKey(playerId);
-
-  statisticsStorage.delete(playerStatsKey);
-  statisticsStorage.delete(timestampKey);
+  try {
+    const cacheKey = `${STATS_KEY_PREFIX}${playerId}`;
+    removeValue(cacheKey);
+  } catch (error) {
+    console.error('Error invalidating player statistics cache:', error);
+  }
 };
 
 /**
- * Invalidate statistics cache for all players
- */
-export const invalidateAllStatsCache = (): void => {
-  const allKeys = statisticsStorage.getAllKeys();
-
-  allKeys.forEach((key) => {
-    if (
-      key.startsWith(STATS_PREFIX) ||
-      key.startsWith(STATS_TIMESTAMP_PREFIX)
-    ) {
-      statisticsStorage.delete(key);
-    }
-  });
-};
-
-/**
- * Update statistics after a game is added or updated
+ * Update statistics after a game change (add/update/delete)
+ * @param game The game that was changed
  */
 export const updateStatisticsAfterGameChange = async (
-  game: Game
+  game: any
 ): Promise<void> => {
-  // Invalidate cache for all players in the game
-  game.players.forEach((player) => {
-    invalidatePlayerStatsCache(player.id);
-  });
+  try {
+    // Invalidate cache for all players in the game
+    game.players.forEach((player: any) => {
+      invalidatePlayerStatsCache(player.id);
+    });
+  } catch (error) {
+    console.error('Error updating statistics after game change:', error);
+  }
 };
 
 /**
- * Clear all statistics data
+ * Clear all statistics for all players
  */
-export const clearAllStatistics = (): void => {
-  invalidateAllStatsCache();
-};
+export const clearAllStatistics = async (): Promise<void> => {
+  try {
+    const allGames = await HistoryStorage.getAllGames();
+    const playerIds = new Set<string>();
 
-// Export for testing
-export const _statisticsStorage = statisticsStorage;
+    // Collect all player IDs
+    allGames.forEach((game) => {
+      game.players.forEach((player) => {
+        playerIds.add(player.id);
+      });
+    });
+
+    // Remove statistics for all players
+    playerIds.forEach((playerId) => {
+      invalidatePlayerStatsCache(playerId);
+    });
+  } catch (error) {
+    console.error('Error clearing all statistics:', error);
+  }
+};

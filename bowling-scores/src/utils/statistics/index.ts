@@ -9,6 +9,12 @@ export * from './basic';
 // Frame statistics calculations
 export * from './frame';
 
+// Trend statistics calculations
+export * from './trend';
+
+// Roll-specific statistics calculations
+export * from './roll';
+
 // Import types
 import {
   Game,
@@ -19,10 +25,16 @@ import {
   BasicStatistics,
   FrameStatistics,
   Frame,
+  TrendStatistics,
+  RollStatistics,
+  FrameNumber,
+  FramePerformance,
 } from '../../types';
 
 import { calculateBasicStatistics } from './basic';
 import { calculateFrameStatistics } from './frame';
+import { calculateTrendStatistics } from './trend';
+import { calculateRollStatistics } from './roll';
 
 /**
  * Calculate game statistics for a specific game
@@ -118,6 +130,9 @@ export const calculateAveragePinsPerRoll = (
 
 /**
  * Calculate statistics for a given player across all games
+ * @param games Array of games
+ * @param player Player to analyze
+ * @returns Complete player statistics
  */
 export function calculatePlayerStatistics(
   games: Game[],
@@ -130,192 +145,59 @@ export function calculatePlayerStatistics(
 
   if (playerGames.length === 0) {
     // Return default stats if player hasn't played any games
-    return createDefaultPlayerStatistics(player.id);
+    return createDefaultPlayerStatistics(player.id, player.name);
   }
 
-  // Initialize statistics
-  const stats: PlayerStatistics = {
+  // Sort games by date for trend analysis
+  const sortedGames = [...playerGames].sort(
+    (a, b) => new Date(a.date).getTime() - new Date(b.date).getTime()
+  );
+
+  // Calculate statistics for each category
+  const basic = calculateBasicStatistics(sortedGames, player.id);
+  const frames = calculateFrameStatistics(sortedGames, player.id);
+  const trends = calculateTrendStatistics(sortedGames, player.id);
+  const rolls = calculateRollStatistics(sortedGames, player.id);
+
+  // Timestamp for when these statistics were calculated
+  const lastUpdated = new Date().toISOString();
+
+  return {
     playerId: player.id,
-    basic: {
-      gamesPlayed: playerGames.length,
-      highScore: 0,
-      lowScore: Number.MAX_SAFE_INTEGER,
-      averageScore: 0,
-      strikeCount: 0,
-      spareCount: 0,
-      openFrameCount: 0,
-      perfectGameCount: 0,
-    },
-    frames: {
-      strikePercentage: 0,
-      sparePercentage: 0,
-      openFramePercentage: 0,
-      averagePinsPerFrame: 0,
-      averageFirstRoll: 0,
-      averageSecondRoll: 0,
-    },
-    trends: {
-      frameByFrameAverage: Array(10).fill(0),
-      scoreImprovement: 0,
-      consistencyScore: 0,
-    },
+    playerName: player.name,
+    basic,
+    frames,
+    trends,
+    rolls,
+    lastUpdated,
   };
-
-  // Collect all player frames from all games
-  let totalScore = 0;
-  let totalFrames = 0;
-  let totalFirstRoll = 0;
-  let totalSecondRoll = 0;
-  let firstRollCount = 0;
-  let secondRollCount = 0;
-  let frameScores = Array(10).fill(0);
-  let frameScoreCount = Array(10).fill(0);
-
-  // Analyze each game
-  playerGames.forEach((game) => {
-    // Find player's data in this game
-    const playerData = game.players.find((p) => p.id === player.id);
-    if (!playerData || !playerData.frames) return;
-
-    // Get the final score
-    const finalScore = calculateFinalScore(playerData.frames);
-    totalScore += finalScore;
-
-    // Update high/low scores
-    if (finalScore > stats.basic.highScore) {
-      stats.basic.highScore = finalScore;
-    }
-    if (finalScore < stats.basic.lowScore) {
-      stats.basic.lowScore = finalScore;
-    }
-
-    // Check for perfect game (300)
-    if (finalScore === 300) {
-      stats.basic.perfectGameCount++;
-    }
-
-    // Analyze each frame
-    playerData.frames.forEach((frame, frameIndex) => {
-      if (!frame) return;
-
-      totalFrames++;
-
-      // Count strikes, spares, open frames
-      if (isStrike(frame)) {
-        stats.basic.strikeCount++;
-      } else if (isSpare(frame)) {
-        stats.basic.spareCount++;
-      } else {
-        stats.basic.openFrameCount++;
-      }
-
-      // Collect first roll data
-      if (frame.rolls[0] !== undefined) {
-        totalFirstRoll += frame.rolls[0];
-        firstRollCount++;
-      }
-
-      // Collect second roll data
-      if (frame.rolls[1] !== undefined && !isStrike(frame)) {
-        totalSecondRoll += frame.rolls[1];
-        secondRollCount++;
-      }
-
-      // Collect frame-by-frame scores
-      if (frameIndex < 10 && frame.score !== undefined) {
-        frameScores[frameIndex] += frame.score;
-        frameScoreCount[frameIndex]++;
-      }
-    });
-  });
-
-  // Calculate averages and percentages
-  stats.basic.averageScore = totalScore / playerGames.length;
-
-  if (totalFrames > 0) {
-    stats.frames.strikePercentage =
-      (stats.basic.strikeCount / totalFrames) * 100;
-    stats.frames.sparePercentage = (stats.basic.spareCount / totalFrames) * 100;
-    stats.frames.openFramePercentage =
-      (stats.basic.openFrameCount / totalFrames) * 100;
-  }
-
-  if (firstRollCount > 0) {
-    stats.frames.averageFirstRoll = totalFirstRoll / firstRollCount;
-  }
-
-  if (secondRollCount > 0) {
-    stats.frames.averageSecondRoll = totalSecondRoll / secondRollCount;
-  }
-
-  // Calculate frame-by-frame averages
-  for (let i = 0; i < 10; i++) {
-    if (frameScoreCount[i] > 0) {
-      stats.trends.frameByFrameAverage[i] = frameScores[i] / frameScoreCount[i];
-    }
-  }
-
-  // Calculate score improvement (difference between first and last game)
-  if (playerGames.length >= 2) {
-    const firstGame = playerGames[0];
-    const lastGame = playerGames[playerGames.length - 1];
-
-    const firstGameScore = calculateFinalScore(
-      firstGame.players.find((p) => p.id === player.id)?.frames || []
-    );
-
-    const lastGameScore = calculateFinalScore(
-      lastGame.players.find((p) => p.id === player.id)?.frames || []
-    );
-
-    stats.trends.scoreImprovement = lastGameScore - firstGameScore;
-  }
-
-  // Handle low score edge case
-  if (stats.basic.lowScore === Number.MAX_SAFE_INTEGER) {
-    stats.basic.lowScore = 0;
-  }
-
-  return stats;
-}
-
-/**
- * Calculate the final score from frames
- */
-function calculateFinalScore(frames: Frame[]): number {
-  if (!frames || frames.length === 0) return 0;
-
-  // Return the score of the last frame that has a score
-  for (let i = frames.length - 1; i >= 0; i--) {
-    if (frames[i] && frames[i].score !== undefined) {
-      return frames[i].score;
-    }
-  }
-
-  return 0;
-}
-
-/**
- * Check if a frame is a strike
- */
-function isStrike(frame: Frame): boolean {
-  return frame.rolls[0] === 10;
-}
-
-/**
- * Check if a frame is a spare
- */
-function isSpare(frame: Frame): boolean {
-  if (frame.rolls[0] === 10) return false; // Strike, not a spare
-  return frame.rolls[0] + (frame.rolls[1] || 0) === 10;
 }
 
 /**
  * Create default player statistics
+ * @param playerId Player ID
+ * @param playerName Optional player name
+ * @returns Default statistics object
  */
-function createDefaultPlayerStatistics(playerId: string): PlayerStatistics {
+function createDefaultPlayerStatistics(
+  playerId: string,
+  playerName: string = 'Unknown Player'
+): PlayerStatistics {
+  const frameNumbers: FrameNumber[] = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10];
+  const defaultFramePerformance: Record<FrameNumber, FramePerformance> =
+    {} as Record<FrameNumber, FramePerformance>;
+
+  frameNumbers.forEach((frameNumber) => {
+    defaultFramePerformance[frameNumber] = {
+      averageScore: 0,
+      strikePercentage: 0,
+      sparePercentage: 0,
+    };
+  });
+
   return {
     playerId,
+    playerName,
     basic: {
       gamesPlayed: 0,
       highScore: 0,
@@ -333,11 +215,41 @@ function createDefaultPlayerStatistics(playerId: string): PlayerStatistics {
       averagePinsPerFrame: 0,
       averageFirstRoll: 0,
       averageSecondRoll: 0,
+      averageFrameScore: 0,
+      framePerformance: defaultFramePerformance,
     },
     trends: {
       frameByFrameAverage: Array(10).fill(0),
       scoreImprovement: 0,
       consistencyScore: 0,
+      recentTrend: 0,
+      last5GamesAverage: 0,
+      last10GamesAverage: 0,
     },
+    rolls: {
+      firstRollAverage: 0,
+      secondRollAverage: 0,
+      pinsDistribution: Array(11).fill(0),
+    },
+    lastUpdated: new Date().toISOString(),
   };
 }
+
+/**
+ * Calculate statistics for all players from a collection of games
+ * @param games Collection of games to analyze
+ * @param players Array of players to generate statistics for
+ * @returns Map of player IDs to their complete statistics
+ */
+export const calculateAllPlayersStatistics = (
+  games: Game[],
+  players: Player[]
+): Map<string, PlayerStatistics> => {
+  const playerStats = new Map<string, PlayerStatistics>();
+
+  players.forEach((player) => {
+    playerStats.set(player.id, calculatePlayerStatistics(games, player));
+  });
+
+  return playerStats;
+};

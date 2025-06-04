@@ -2,7 +2,7 @@ import React, { useMemo, useState, useEffect } from 'react';
 import { View, StyleSheet, ScrollView } from 'react-native';
 import { RouteProp, useNavigation, useRoute } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
-import { RootStackParamList, Player } from '../types';
+import { RootStackParamList, PlayerState } from '../types';
 import { Container, Typography, Button, Card } from '../components/ui';
 import { StatisticCard, StatisticsSection } from '../components/statistics';
 import { useTheme } from '../contexts/ThemeContext';

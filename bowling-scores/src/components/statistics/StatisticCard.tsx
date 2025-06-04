@@ -15,6 +15,7 @@ export interface StatisticCardProps {
   icon?: IconName;
   accent?: boolean;
   explanation?: string;
+  description?: string;
 }
 
 const StatisticCard: React.FC<StatisticCardProps> = ({

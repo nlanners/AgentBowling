@@ -1,11 +1,10 @@
 import { Game } from './game';
 
 /**
- * GameHistory interface representing the collection of past games
- * for recording and statistics purposes
+ * GameHistory interface representing the history of all saved games
  */
 export interface GameHistory {
-  /** Array of completed Game objects */
+  /** Array of saved games */
   games: Game[];
 }
 

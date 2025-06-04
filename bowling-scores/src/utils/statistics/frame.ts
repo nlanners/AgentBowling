@@ -126,34 +126,111 @@ export const calculateFrameStatistics = (
       strikePercentage: 0,
       sparePercentage: 0,
       openFramePercentage: 0,
+      averagePinsPerFrame: 0,
+      averageFirstRoll: 0,
+      averageSecondRoll: 0,
       averageFrameScore: 0,
-      framePerformance: {} as Record<FrameNumber, FramePerformance>,
+      framePerformance: createDefaultFramePerformance(),
     };
   }
 
-  // Calculate performance for each frame number
-  const framePerformance: Partial<Record<FrameNumber, FramePerformance>> = {};
+  // Calculate average pins per frame
+  const totalPins = allFrames.reduce(
+    (total, frame) =>
+      total + frame.rolls.reduce((sum, roll) => sum + roll.pinsKnocked, 0),
+    0
+  );
+  const averagePinsPerFrame = totalPins / allFrames.length;
 
-  // For each frame number (1-10)
-  for (let i = 1; i <= 10; i++) {
-    const frameNumber = i as FrameNumber;
-    const framesAtPosition = extractFramesByNumber(
-      games,
-      playerId,
-      frameNumber
-    );
+  // Calculate average first and second roll
+  let totalFirstRoll = 0;
+  let firstRollCount = 0;
+  let totalSecondRoll = 0;
+  let secondRollCount = 0;
 
-    if (framesAtPosition.length > 0) {
-      framePerformance[frameNumber] =
-        calculateFramePerformance(framesAtPosition);
+  allFrames.forEach((frame) => {
+    if (frame.rolls.length > 0) {
+      totalFirstRoll += frame.rolls[0].pinsKnocked;
+      firstRollCount++;
     }
-  }
+    if (frame.rolls.length > 1) {
+      totalSecondRoll += frame.rolls[1].pinsKnocked;
+      secondRollCount++;
+    }
+  });
+
+  const averageFirstRoll =
+    firstRollCount > 0 ? totalFirstRoll / firstRollCount : 0;
+  const averageSecondRoll =
+    secondRollCount > 0 ? totalSecondRoll / secondRollCount : 0;
+
+  // Calculate frame-by-frame performance
+  const framePerformance = calculateFrameByFramePerformance(games, playerId);
 
   return {
     strikePercentage: calculateStrikePercentage(allFrames),
     sparePercentage: calculateSparePercentage(allFrames),
     openFramePercentage: calculateOpenFramePercentage(allFrames),
+    averagePinsPerFrame,
+    averageFirstRoll,
+    averageSecondRoll,
     averageFrameScore: calculateAverageFrameScore(allFrames),
-    framePerformance: framePerformance as Record<FrameNumber, FramePerformance>,
+    framePerformance,
   };
+};
+
+/**
+ * Calculate performance metrics for each frame position (1-10)
+ * @param games Array of games
+ * @param playerId Player ID
+ * @returns Record of frame number to performance metrics
+ */
+export const calculateFrameByFramePerformance = (
+  games: Game[],
+  playerId: string
+): Record<FrameNumber, FramePerformance> => {
+  // Initialize with default values
+  const framePerformance: Record<FrameNumber, FramePerformance> =
+    createDefaultFramePerformance();
+
+  // Frame numbers (1-10)
+  const frameNumbers: FrameNumber[] = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10];
+
+  // Calculate performance for each frame position
+  frameNumbers.forEach((frameNumber) => {
+    const framesForPosition = extractFramesByNumber(
+      games,
+      playerId,
+      frameNumber
+    );
+    if (framesForPosition.length > 0) {
+      framePerformance[frameNumber] =
+        calculateFramePerformance(framesForPosition);
+    }
+  });
+
+  return framePerformance;
+};
+
+/**
+ * Create default frame performance record
+ * @returns Default frame performance for all 10 frames
+ */
+export const createDefaultFramePerformance = (): Record<
+  FrameNumber,
+  FramePerformance
+> => {
+  const frameNumbers: FrameNumber[] = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10];
+  const defaultPerformance: Record<FrameNumber, FramePerformance> =
+    {} as Record<FrameNumber, FramePerformance>;
+
+  frameNumbers.forEach((frameNumber) => {
+    defaultPerformance[frameNumber] = {
+      averageScore: 0,
+      strikePercentage: 0,
+      sparePercentage: 0,
+    };
+  });
+
+  return defaultPerformance;
 };

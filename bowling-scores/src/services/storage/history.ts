@@ -231,3 +231,29 @@ export const clearGameHistory = async (): Promise<boolean> => {
     return false;
   }
 };
+
+/**
+ * Add a new game to storage
+ * @param game The game to add
+ * @returns Promise resolving to true if successful
+ */
+export const addGame = async (game: Game): Promise<boolean> => {
+  return saveGame(game);
+};
+
+/**
+ * Update an existing game in storage
+ * @param game The game to update
+ * @returns Promise resolving to true if successful
+ */
+export const updateGame = async (game: Game): Promise<boolean> => {
+  return saveGame(game);
+};
+
+/**
+ * Clear all games from storage
+ * @returns Promise resolving to true if successful
+ */
+export const clearAllGames = async (): Promise<boolean> => {
+  return clearGameHistory();
+};
