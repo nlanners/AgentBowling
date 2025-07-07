@@ -165,16 +165,28 @@ function determineNextFrameAndPlayer(game: Game): {
 
   // For frames 1-9
   if (frame.isStrike) {
-    // If it's a strike, move to the next frame for this player
-    const nextFrame = currentFrame + 1;
-    return { nextFrame, nextPlayer: currentPlayer };
+    // If it's a strike, move to the next player on the same frame
+    const nextPlayer = (currentPlayer + 1) % players.length;
+
+    // If we're back to the first player, we've completed a round - move to next frame
+    if (nextPlayer === 0) {
+      return { nextFrame: currentFrame + 1, nextPlayer: 0 };
+    }
+
+    return { nextFrame: currentFrame, nextPlayer };
   } else if (frame.rolls.length < 2) {
-    // If we haven't made 2 rolls yet, stay on the same frame
+    // If we haven't made 2 rolls yet, stay on the same frame and same player
     return { nextFrame: currentFrame, nextPlayer: currentPlayer };
   } else {
-    // Move to the next frame after 2 rolls
-    const nextFrame = currentFrame + 1;
-    return { nextFrame, nextPlayer: currentPlayer };
+    // After 2 rolls, move to the next player on the same frame
+    const nextPlayer = (currentPlayer + 1) % players.length;
+
+    // If we're back to the first player, we've completed a round - move to next frame
+    if (nextPlayer === 0) {
+      return { nextFrame: currentFrame + 1, nextPlayer: 0 };
+    }
+
+    return { nextFrame: currentFrame, nextPlayer };
   }
 }
 

@@ -73,7 +73,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   screenPadding: {
-    paddingHorizontal: 20, // Better separation from viewport edges
+    paddingHorizontal: 24, // Increased from 20px for better breathing room
     paddingVertical: 8, // Base vertical padding (safe area will add more)
   },
 });

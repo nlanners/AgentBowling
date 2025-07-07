@@ -126,7 +126,7 @@ const GameDetailsScreen: React.FC<GameDetailsScreenProps> = ({
   // Loading state
   if (isLoading) {
     return (
-      <Container>
+      <Container variant='screen'>
         <View style={styles.loadingContainer}>
           <ActivityIndicator size='large' color={theme.colors.primary.main} />
           <Typography
@@ -143,7 +143,7 @@ const GameDetailsScreen: React.FC<GameDetailsScreenProps> = ({
   // Error state
   if (error || !game) {
     return (
-      <Container>
+      <Container variant='screen'>
         <View style={styles.header}>
           <Button
             variant='text'
@@ -166,14 +166,13 @@ const GameDetailsScreen: React.FC<GameDetailsScreenProps> = ({
           <Typography
             variant='h3'
             color={theme.colors.text.secondary}
-            align='center'>
+            style={{ textAlign: 'center' }}>
             {error || 'Game not found'}
           </Typography>
           <Typography
             variant='body1'
             color={theme.colors.text.secondary}
-            align='center'
-            style={styles.errorText}>
+            style={[styles.errorText, { textAlign: 'center' }] as any}>
             The requested game could not be loaded
           </Typography>
           <Button
@@ -188,7 +187,7 @@ const GameDetailsScreen: React.FC<GameDetailsScreenProps> = ({
   }
 
   return (
-    <Container>
+    <Container variant='screen'>
       <ScrollView>
         <View style={styles.header}>
           <Button
@@ -357,7 +356,7 @@ const styles = StyleSheet.create({
   },
   backButton: {
     alignSelf: 'flex-start',
-    marginLeft: -8,
+    marginLeft: 0,
   },
   loadingContainer: {
     flex: 1,

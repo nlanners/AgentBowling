@@ -167,6 +167,8 @@ const Icon: React.FC<IconProps> = ({ name, size = 'medium', color, style }) => {
           fontSize: iconSize,
           color: iconColor,
           textAlign: 'center',
+          lineHeight: iconSize,
+          textAlignVertical: 'center',
         }}>
         {getIconChar()}
       </Text>

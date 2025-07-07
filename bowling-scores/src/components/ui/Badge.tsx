@@ -19,10 +19,12 @@ export type BadgeVariant =
   | 'warning'
   | 'error';
 export type BadgeSize = 'small' | 'medium' | 'large';
+export type BadgeShape = 'circular' | 'rectangular';
 
 export interface BadgeProps {
   variant?: BadgeVariant;
   size?: BadgeSize;
+  shape?: BadgeShape;
   content?: string;
   children?: React.ReactNode;
   style?: StyleProp<ViewStyle>;
@@ -32,6 +34,7 @@ export interface BadgeProps {
 const Badge: React.FC<BadgeProps> = ({
   variant = 'active',
   size = 'medium',
+  shape,
   content,
   children,
   style,
@@ -39,6 +42,14 @@ const Badge: React.FC<BadgeProps> = ({
 }) => {
   const { theme } = useTheme();
   const commonStyles = createCommonStyles();
+
+  // Determine shape - strikes and spares default to rectangular, others to circular
+  const getShape = () => {
+    if (shape) return shape;
+    return variant === 'strike' || variant === 'spare'
+      ? 'rectangular'
+      : 'circular';
+  };
 
   // Determine background color based on variant
   const getBadgeColor = () => {
@@ -86,6 +97,18 @@ const Badge: React.FC<BadgeProps> = ({
     }
   };
 
+  // Get shape styles
+  const getShapeStyle = () => {
+    const currentShape = getShape();
+    switch (currentShape) {
+      case 'rectangular':
+        return styles.rectangular;
+      case 'circular':
+      default:
+        return styles.circular;
+    }
+  };
+
   // Get font size based on badge size
   const getFontSize = () => {
     switch (size) {
@@ -119,6 +142,7 @@ const Badge: React.FC<BadgeProps> = ({
       style={[
         styles.badge,
         getSizeStyle(),
+        getShapeStyle(),
         { backgroundColor: getBadgeColor() },
         style,
       ]}
@@ -144,15 +168,15 @@ const Badge: React.FC<BadgeProps> = ({
 
 const styles = StyleSheet.create({
   badge: {
-    borderRadius: 999, // Large value for pill shape
     justifyContent: 'center',
     alignItems: 'center',
     overflow: 'hidden',
   },
   small: {
-    minWidth: 24,
+    width: 17,
     height: 24,
-    paddingHorizontal: 6,
+    paddingHorizontal: 0,
+    paddingVertical: 0,
   },
   medium: {
     minWidth: 32,
@@ -166,6 +190,12 @@ const styles = StyleSheet.create({
   },
   text: {
     textAlign: 'center',
+  },
+  rectangular: {
+    borderRadius: 0,
+  },
+  circular: {
+    borderRadius: 999,
   },
 });
 

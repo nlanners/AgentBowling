@@ -109,9 +109,9 @@ describe('Game Utils Tests', () => {
       expect(updatedGame.frames[0][0].isStrike).toBe(true);
       expect(updatedGame.frames[0][0].isSpare).toBe(false);
 
-      // After a strike, should move to next frame
-      expect(updatedGame.currentFrame).toBe(1);
-      expect(updatedGame.currentPlayer).toBe(0);
+      // After a strike, should move to next player on same frame
+      expect(updatedGame.currentFrame).toBe(0);
+      expect(updatedGame.currentPlayer).toBe(1);
     });
 
     it('should update frame flags when a spare is rolled', () => {
@@ -137,9 +137,9 @@ describe('Game Utils Tests', () => {
       expect(gameState.frames[0][0].isStrike).toBe(false);
       expect(gameState.frames[0][0].isSpare).toBe(true);
 
-      // After a spare, should move to next frame
-      expect(gameState.currentFrame).toBe(1);
-      expect(gameState.currentPlayer).toBe(0);
+      // After a spare, should move to next player on same frame
+      expect(gameState.currentFrame).toBe(0);
+      expect(gameState.currentPlayer).toBe(1);
     });
 
     it('should move to the next player after completing a frame', () => {
@@ -162,14 +162,52 @@ describe('Game Utils Tests', () => {
       gameState = addRoll(gameState, 4);
 
       // Should move to next player, same frame
-      expect(gameState.currentFrame).toBe(1);
-      expect(gameState.currentPlayer).toBe(0);
+      expect(gameState.currentFrame).toBe(0);
+      expect(gameState.currentPlayer).toBe(1);
 
       // Second player completes a frame
       gameState = addRoll(gameState, 2);
       gameState = addRoll(gameState, 3);
 
       // Should move back to first player, next frame
+      expect(gameState.currentFrame).toBe(1);
+      expect(gameState.currentPlayer).toBe(0);
+    });
+
+    it('should handle mixed strikes and regular frames in multi-player games', () => {
+      const players = createTestPlayers();
+      const game: Game = {
+        id: '1',
+        date: '2025-05-29',
+        players,
+        frames: [],
+        currentPlayer: 0,
+        currentFrame: 0,
+        isComplete: false,
+        completed: false,
+      };
+
+      let gameState = initializeGameFrames(game);
+
+      // Player 1 gets a strike in frame 1
+      gameState = addRoll(gameState, 10);
+      expect(gameState.currentFrame).toBe(0);
+      expect(gameState.currentPlayer).toBe(1);
+
+      // Player 2 gets a regular frame in frame 1
+      gameState = addRoll(gameState, 4);
+      gameState = addRoll(gameState, 3);
+      expect(gameState.currentFrame).toBe(1);
+      expect(gameState.currentPlayer).toBe(0);
+
+      // Player 1 gets a regular frame in frame 2
+      gameState = addRoll(gameState, 5);
+      gameState = addRoll(gameState, 2);
+      expect(gameState.currentFrame).toBe(1);
+      expect(gameState.currentPlayer).toBe(1);
+
+      // Player 2 gets a strike in frame 2
+      gameState = addRoll(gameState, 10);
       expect(gameState.currentFrame).toBe(2);
       expect(gameState.currentPlayer).toBe(0);
     });

@@ -21,6 +21,7 @@ const FrameCell: React.FC<FrameCellProps> = React.memo(
 
     // Memoize expensive calculations
     const isTenthFrame = useMemo(() => frameIndex === 9, [frameIndex]);
+    const isFirstFrame = useMemo(() => frameIndex === 0, [frameIndex]);
 
     const rollDisplays = useMemo(
       () => getFrameRollDisplay(frame, frameIndex),
@@ -60,18 +61,20 @@ const FrameCell: React.FC<FrameCellProps> = React.memo(
       theme.colors.text.primary,
     ]);
 
-    // Memoize container styles
+    // Memoize container styles with conditional border radius
     const containerStyles = useMemo(
       () => [
         styles.container,
         isTenthFrame && styles.tenthFrame,
         isCurrentFrame && styles.currentFrame,
+        isFirstFrame && styles.firstFrame,
+        isTenthFrame && styles.lastFrame,
         {
           borderColor,
           backgroundColor,
         },
       ],
-      [isTenthFrame, isCurrentFrame, borderColor, backgroundColor]
+      [isTenthFrame, isCurrentFrame, isFirstFrame, borderColor, backgroundColor]
     );
 
     // Memoize accessibility label
@@ -159,18 +162,26 @@ FrameCell.displayName = 'FrameCell';
 const styles = StyleSheet.create({
   container: {
     borderWidth: 1,
-    borderRadius: 4,
-    marginHorizontal: 2,
-    width: 40,
+    borderRadius: 0,
+    marginHorizontal: 0,
+    width: 34,
     height: 80,
     justifyContent: 'space-between',
     overflow: 'hidden',
   },
   tenthFrame: {
-    width: 60,
+    width: 52,
   },
   currentFrame: {
     borderWidth: 2,
+  },
+  firstFrame: {
+    borderTopLeftRadius: 4,
+    borderBottomLeftRadius: 4,
+  },
+  lastFrame: {
+    borderTopRightRadius: 4,
+    borderBottomRightRadius: 4,
   },
   frameNumber: {
     alignItems: 'center',

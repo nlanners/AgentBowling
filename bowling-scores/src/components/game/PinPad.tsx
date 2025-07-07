@@ -229,20 +229,6 @@ const PinPad: React.FC<PinPadProps> = ({ game, onPinSelect }) => {
         <Typography variant='h3' style={styles.rollTitle}>
           {rollLabel}
         </Typography>
-        {!isFirstRoll && (
-          <Typography
-            variant='body1'
-            color={theme.colors.text.secondary}
-            style={styles.rollStatus}>
-            {isTenthFrame && rollIndex === 2
-              ? `${frame?.rolls[1]?.pinsKnocked || 0} pins down, ${
-                  10 - (frame?.rolls[1]?.pinsKnocked || 0)
-                } remaining`
-              : `${
-                  frame?.rolls[0]?.pinsKnocked || 0
-                } pins down, ${remainingPins} remaining`}
-          </Typography>
-        )}
       </View>
 
       <View style={styles.pinPad}>{renderPinButtons()}</View>
@@ -255,7 +241,7 @@ const styles = StyleSheet.create({
     padding: 16,
   },
   header: {
-    marginBottom: 16,
+    marginBottom: 8,
     alignItems: 'center',
   },
   pinPad: {
@@ -271,9 +257,6 @@ const styles = StyleSheet.create({
   },
   rollTitle: {
     marginBottom: 8,
-  },
-  rollStatus: {
-    textAlign: 'center',
   },
 });
 

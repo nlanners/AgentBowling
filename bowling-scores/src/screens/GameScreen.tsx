@@ -174,7 +174,7 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   scrollContent: {
-    padding: 20, // Better separation from viewport edges
+    padding: 8, // Reduced from 20px to save 24px total
     paddingBottom: 40, // More bottom padding for better scrolling
   },
   header: {
@@ -193,7 +193,7 @@ const styles = StyleSheet.create({
   },
   scoreboardContainer: {
     marginBottom: 32, // More breathing room
-    paddingHorizontal: 4, // Slight padding for visual separation
+    paddingHorizontal: 0, // Removed padding to save 8px total
   },
   pinInputContainer: {
     marginBottom: 32, // More breathing room
