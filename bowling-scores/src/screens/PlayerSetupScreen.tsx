@@ -69,61 +69,87 @@ const PlayerSetupScreen: React.FC = () => {
 
   const renderPlayerItem = ({ item }: { item: Player }) => (
     <Card style={styles.playerItem}>
-      <Typography variant='body1'>{item.name}</Typography>
+      <Typography variant='body1' style={styles.playerName}>
+        {item.name}
+      </Typography>
       <Button
         variant='text'
         onPress={() => removePlayer(item.id)}
-        style={{ paddingHorizontal: 8 }}>
+        style={styles.removeButton}>
         <Text style={{ color: theme.colors.error }}>Remove</Text>
       </Button>
     </Card>
   );
 
   return (
-    <SafeAreaView style={styles.safeArea}>
-      <View style={styles.container}>
-        <Typography variant='h1' align='center' style={styles.title}>
-          Player Setup
-        </Typography>
-
-        <View style={styles.inputContainer}>
-          <TextInput
-            style={styles.input}
-            placeholder='Enter player name'
-            value={newPlayerName}
-            onChangeText={setNewPlayerName}
-            autoFocus={true}
-          />
-          <Button
-            variant='primary'
-            onPress={addPlayer}
-            style={styles.addButton}>
-            Add
-          </Button>
+    <SafeAreaView
+      style={[
+        styles.safeArea,
+        { backgroundColor: theme.colors.background.default },
+      ]}>
+      <Container variant='screen'>
+        <View style={styles.header}>
+          <Typography variant='h1' style={styles.title}>
+            Player Setup
+          </Typography>
         </View>
 
-        <FlatList
-          data={players}
-          keyExtractor={(item) => item.id}
-          renderItem={renderPlayerItem}
-          style={styles.playerList}
-          contentContainerStyle={styles.playerListContent}
-          ListEmptyComponent={
-            <Typography
-              variant='body1'
-              align='center'
-              color={theme.colors.text.secondary}
-              style={styles.emptyText}>
-              No players added yet
-            </Typography>
-          }
-        />
+        <View style={styles.inputSection}>
+          <View style={styles.inputContainer}>
+            <TextInput
+              style={[
+                styles.input,
+                {
+                  borderColor: theme.colors.gray[300],
+                  backgroundColor: theme.colors.background.paper,
+                  color: theme.colors.text.primary,
+                },
+              ]}
+              placeholder='Enter player name'
+              placeholderTextColor={theme.colors.text.secondary}
+              value={newPlayerName}
+              onChangeText={setNewPlayerName}
+              autoFocus={true}
+            />
+            <Button
+              variant='primary'
+              onPress={addPlayer}
+              style={styles.addButton}>
+              Add Player
+            </Button>
+          </View>
+        </View>
+
+        <View style={styles.playersSection}>
+          <Typography variant='h3' style={styles.sectionTitle}>
+            Players ({players.length})
+          </Typography>
+
+          <FlatList
+            data={players}
+            keyExtractor={(item) => item.id}
+            renderItem={renderPlayerItem}
+            style={styles.playerList}
+            contentContainerStyle={styles.playerListContent}
+            showsVerticalScrollIndicator={false}
+            ListEmptyComponent={
+              <View style={styles.emptyContainer}>
+                <Typography
+                  variant='body1'
+                  color={theme.colors.text.secondary}
+                  style={styles.emptyText}>
+                  No players added yet
+                </Typography>
+              </View>
+            }
+          />
+        </View>
 
         <View style={styles.footer}>
           <Button
             variant='secondary'
             onPress={() => navigation.goBack()}
-            style={{ marginRight: 10, flex: 1 }}>
+            style={styles.backButton}>
             Back
           </Button>
 
@@ -131,11 +157,11 @@ const PlayerSetupScreen: React.FC = () => {
             variant='primary'
             onPress={startGame}
             disabled={players.length === 0}
-            style={{ flex: 1 }}>
+            style={styles.startButton}>
             Start Game
           </Button>
         </View>
-      </View>
+      </Container>
     </SafeAreaView>
   );
 };
@@ -143,55 +169,99 @@ const PlayerSetupScreen: React.FC = () => {
 const styles = StyleSheet.create({
   safeArea: {
     flex: 1,
-    backgroundColor: '#fff',
   },
-  container: {
-    flex: 1,
-    paddingHorizontal: 20,
+  header: {
+    alignItems: 'center',
+    marginBottom: 40, // More breathing room
+    paddingHorizontal: 16, // Ensure content doesn't touch edges
   },
   title: {
-    marginVertical: 24,
+    textAlign: 'center',
+    marginBottom: 0,
+  },
+  inputSection: {
+    marginBottom: 40, // More breathing room
+    paddingHorizontal: 4, // Slight padding for better visual separation
   },
   inputContainer: {
     flexDirection: 'row',
-    marginBottom: 24,
+    gap: 16, // Better gap between elements
+    alignItems: 'center',
+    marginHorizontal: 4, // Slight margin for better separation
   },
   input: {
     flex: 1,
     borderWidth: 1,
-    borderColor: '#ccc',
     borderRadius: 8,
-    padding: 12,
-    marginRight: 12,
-    height: 50, // Match height with buttons
+    paddingHorizontal: 20, // More generous horizontal padding
+    paddingVertical: 14, // Better vertical padding
+    height: 52, // Slightly taller for better touch target
     fontSize: 16,
+    marginHorizontal: 2, // Slight margin for separation
   },
   addButton: {
-    minWidth: 80,
-    height: 50,
+    minWidth: 120,
+    height: 52, // Match input height
+    marginVertical: 0,
+  },
+  playersSection: {
+    flex: 1,
+    marginBottom: 32, // Better separation from footer
+    paddingHorizontal: 4, // Slight padding for visual separation
+  },
+  sectionTitle: {
+    marginBottom: 20, // More breathing room
+    marginLeft: 4, // Slight alignment with list items
   },
   playerList: {
     flex: 1,
   },
   playerListContent: {
-    paddingBottom: 16,
+    gap: 16, // Better gap between list items
+    paddingHorizontal: 4, // Ensure list items don't touch edges
   },
   playerItem: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    padding: 16,
-    marginBottom: 12,
-    borderRadius: 8,
+    paddingHorizontal: 20, // More generous horizontal padding
+    paddingVertical: 18, // Better vertical padding
+    marginVertical: 0,
+    marginHorizontal: 4, // Slight horizontal margin for separation
+    minHeight: 60, // Better touch target
+  },
+  playerName: {
+    flex: 1,
+    marginRight: 16, // Space between name and button
+  },
+  removeButton: {
+    paddingHorizontal: 12, // Better horizontal padding
+    paddingVertical: 8, // Better vertical padding
+    marginVertical: 0,
+    minHeight: 44, // Better touch target
+  },
+  emptyContainer: {
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: 64, // More breathing room
+    paddingHorizontal: 24, // Ensure text doesn't touch edges
   },
   emptyText: {
-    marginTop: 40,
+    textAlign: 'center',
   },
   footer: {
     flexDirection: 'row',
-    justifyContent: 'space-between',
-    marginTop: 24,
-    marginBottom: 24,
+    gap: 20, // Better gap between buttons
+    paddingTop: 24, // More separation from content
+    paddingHorizontal: 8, // Ensure buttons don't touch edges
+  },
+  backButton: {
+    flex: 1,
+    marginVertical: 0,
+  },
+  startButton: {
+    flex: 1,
+    marginVertical: 0,
   },
 });
 

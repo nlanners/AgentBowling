@@ -95,7 +95,7 @@ const GameScreen: React.FC = () => {
 
   if (!game) {
     return (
-      <Container variant='centered'>
+      <Container variant='screenCentered'>
         <Typography variant='h3'>Loading game...</Typography>
       </Container>
     );
@@ -105,32 +105,43 @@ const GameScreen: React.FC = () => {
     <Container>
       <ScrollView
         style={styles.scrollView}
-        contentContainerStyle={styles.scrollContent}>
+        contentContainerStyle={styles.scrollContent}
+        showsVerticalScrollIndicator={false}>
         <View style={styles.header}>
-          <Typography variant='h3'>Frame {game.currentFrame + 1}</Typography>
-          <Typography variant='body1'>
+          <Typography variant='h2' style={styles.frameTitle}>
+            Frame {game.currentFrame + 1}
+          </Typography>
+          <Typography
+            variant='h4'
+            color={theme.colors.text.secondary}
+            style={styles.playerTurn}>
             {game.players[game.currentPlayer].name}'s turn
           </Typography>
         </View>
 
-        <Scoreboard game={game} />
+        <View style={styles.scoreboardContainer}>
+          <Scoreboard game={game} />
+        </View>
 
-        {!game.isComplete && <PinInput game={game} />}
+        {!game.isComplete && (
+          <View style={styles.pinInputContainer}>
+            <PinInput game={game} />
+          </View>
+        )}
 
         {game.isComplete ? (
           <Card style={styles.gameCompleteCard}>
             <Typography
               variant='h2'
-              align='center'
               color={theme.colors.success}
               style={styles.gameCompleteText}>
-              Game Complete!
+              🎉 Game Complete!
             </Typography>
 
             <View style={styles.buttonRow}>
               <Button
                 variant='secondary'
-                style={[styles.actionButton, { marginRight: 12 }]}
+                style={styles.actionButton}
                 onPress={handleReturnHome}>
                 Return Home
               </Button>
@@ -144,12 +155,14 @@ const GameScreen: React.FC = () => {
             </View>
           </Card>
         ) : (
-          <Button
-            variant='secondary'
-            style={styles.endGameButton}
-            onPress={handleEndGame}>
-            End Game
-          </Button>
+          <View style={styles.endGameContainer}>
+            <Button
+              variant='outline'
+              style={styles.endGameButton}
+              onPress={handleEndGame}>
+              End Game
+            </Button>
+          </View>
         )}
       </ScrollView>
     </Container>
@@ -161,32 +174,61 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   scrollContent: {
-    paddingBottom: 24,
+    padding: 20, // Better separation from viewport edges
+    paddingBottom: 40, // More bottom padding for better scrolling
   },
   header: {
-    marginBottom: 20,
     alignItems: 'center',
+    marginBottom: 32, // More breathing room
+    paddingVertical: 20, // Better vertical padding
+    paddingHorizontal: 16, // Ensure content doesn't touch edges
+  },
+  frameTitle: {
+    textAlign: 'center',
+    marginBottom: 12, // Better separation
+  },
+  playerTurn: {
+    textAlign: 'center',
+    marginBottom: 0,
+  },
+  scoreboardContainer: {
+    marginBottom: 32, // More breathing room
+    paddingHorizontal: 4, // Slight padding for visual separation
+  },
+  pinInputContainer: {
+    marginBottom: 32, // More breathing room
+    paddingHorizontal: 4, // Slight padding for visual separation
+  },
+  endGameContainer: {
+    alignItems: 'center',
+    paddingTop: 24, // More breathing room
+    paddingHorizontal: 16, // Ensure button doesn't touch edges
   },
   endGameButton: {
-    marginTop: 20,
-    marginBottom: 16,
+    minWidth: 200,
+    marginVertical: 0,
   },
   gameCompleteCard: {
-    marginTop: 20,
-    marginBottom: 16,
-    padding: 20,
+    marginTop: 16, // Better separation from content above
+    padding: 32, // More generous padding
+    alignItems: 'center',
+    marginVertical: 0,
+    marginHorizontal: 8, // Slight horizontal margin
   },
   gameCompleteText: {
-    marginBottom: 20,
+    textAlign: 'center',
+    marginBottom: 32, // More breathing room
     fontWeight: 'bold',
   },
   buttonRow: {
     flexDirection: 'row',
     width: '100%',
+    gap: 20, // Better gap between buttons
+    paddingHorizontal: 8, // Ensure buttons don't touch card edges
   },
   actionButton: {
     flex: 1,
-    paddingVertical: 12,
+    marginVertical: 0,
   },
 });
 

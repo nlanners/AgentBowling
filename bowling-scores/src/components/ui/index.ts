@@ -11,6 +11,7 @@ export { default as Input } from './Input';
 export { default as Badge } from './Badge';
 export { default as Icon } from './Icon';
 export { default as Divider } from './Divider';
+export { default as ErrorBoundary } from './ErrorBoundary';
 export { ConfirmDialog } from './ConfirmDialog';
 export { InfoIcon } from './InfoIcon';
 export { CustomDatePicker } from './CustomDatePicker';

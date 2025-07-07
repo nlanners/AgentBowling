@@ -10,6 +10,13 @@
     "lint": "eslint .",
     "lint:fix": "eslint . --fix",
     "test": "jest",
+    "test:unit": "jest --config jest.config.js",
+    "test:integration": "jest --config jest.integration.config.js",
+    "test:all": "npm run test:unit && npm run test:integration",
+    "test:watch": "jest --watch",
+    "test:integration:watch": "jest --config jest.integration.config.js --watch",
+    "test:coverage": "jest --coverage",
+    "test:integration:coverage": "jest --config jest.integration.config.js --coverage",
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {

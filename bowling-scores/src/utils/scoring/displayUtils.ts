@@ -5,6 +5,7 @@
 import { Frame, Roll } from '../../types/frame';
 import { Game } from '../../types/game';
 import { isStrike, isSpare } from './calculateScore';
+import { memoize } from '../performance';
 
 /**
  * Converts a roll value to its display representation
@@ -217,7 +218,7 @@ export function getCurrentRollDisplay(game: Game): string {
 }
 
 /**
- * Formats a score for display
+ * Formats a numeric score for display
  * @param score The score to format
  * @returns A formatted score string
  */
@@ -230,11 +231,11 @@ export function formatScore(score: number | undefined): string {
 }
 
 /**
- * Gets a user-friendly message based on a roll result
- * @param pinsKnocked The number of pins knocked down
- * @param isStrike Whether the roll was a strike
- * @param isSpare Whether the roll completed a spare
- * @returns A message appropriate for the roll
+ * Get the message to display after a roll
+ * @param pinsKnocked Number of pins knocked down
+ * @param isStrike Whether this was a strike
+ * @param isSpare Whether this was a spare
+ * @returns Message string
  */
 export function getRollResultMessage(
   pinsKnocked: number,
@@ -261,89 +262,171 @@ export function getRollResultMessage(
 }
 
 /**
- * Calculates which pins are still standing after a roll
- * @param pinsKnocked The number of pins knocked down
- * @returns An array of pin numbers that are still standing (1-10)
+ * Get the array of remaining pins after a roll
+ * @param pinsKnocked Number of pins knocked down
+ * @returns Array of remaining pin numbers (1-10)
  */
 export function getRemainingPins(pinsKnocked: number): number[] {
-  if (pinsKnocked === 10) {
-    return []; // All pins down
+  const totalPins = 10;
+  const remaining = totalPins - pinsKnocked;
+  const pins = [];
+
+  for (let i = 1; i <= remaining; i++) {
+    pins.push(i);
   }
 
-  // This is a simplification - in a real game, we'd track exactly which pins are down
-  // For this app, we'll just return the correct number of pins
-  const pinCount = 10 - pinsKnocked;
-  return Array.from({ length: pinCount }, (_, i) => i + 1);
+  return pins;
 }
 
 /**
- * Determines if a specific number of pins can be knocked down in the current frame
- * @param game The current game
- * @param pinsToKnock The number of pins to knock down
- * @returns Boolean indicating if the roll is valid
+ * Determines if a player can knock down a specific number of pins
+ * @param game Current game state
+ * @param pinsToKnock Number of pins to attempt to knock down
+ * @returns Boolean indicating if the move is valid
  */
 export function canKnockDownPins(game: Game, pinsToKnock: number): boolean {
+  // Basic validation
+  if (pinsToKnock < 0 || pinsToKnock > 10) {
+    return false;
+  }
+
   const { currentPlayer, currentFrame } = game;
-  const frame = game.frames[currentPlayer][currentFrame];
+  const frames = game.frames[currentPlayer];
 
-  // No frame data yet
-  if (!frame) return pinsToKnock <= 10;
+  // Make sure we have frames array
+  if (!frames || !frames[currentFrame]) {
+    return pinsToKnock <= 10;
+  }
 
-  // First roll in any frame
+  const frame = frames[currentFrame];
+
+  // If no rolls yet, any valid number is allowed
   if (frame.rolls.length === 0) {
     return pinsToKnock <= 10;
   }
 
-  // Special case for 10th frame
+  // If this is the second roll of a normal frame (not 10th)
+  if (frame.rolls.length === 1 && currentFrame < 9) {
+    const firstRollPins = frame.rolls[0].pinsKnocked;
+    return pinsToKnock <= 10 - firstRollPins;
+  }
+
+  // If this is the 10th frame, special rules apply
   if (currentFrame === 9) {
-    // First roll already happened
     if (frame.rolls.length === 1) {
-      // If the first roll was a strike, any valid roll is allowed
-      if (frame.rolls[0].pinsKnocked === 10) {
+      // Second roll of 10th frame
+      const firstRollPins = frame.rolls[0].pinsKnocked;
+
+      // If first roll was a strike, any number is allowed
+      if (firstRollPins === 10) {
         return pinsToKnock <= 10;
       }
 
-      // Otherwise, ensure the sum doesn't exceed 10
-      return frame.rolls[0].pinsKnocked + pinsToKnock <= 10;
+      // Otherwise, normal spare rules apply
+      return pinsToKnock <= 10 - firstRollPins;
     }
 
-    // Second roll already happened
     if (frame.rolls.length === 2) {
-      // Only allowed a third roll if first was strike or frame is spare
-      if (frame.isStrike || frame.isSpare) {
-        // If first roll was a strike and second roll was a strike, any valid roll is allowed
-        if (
-          frame.rolls[0].pinsKnocked === 10 &&
-          frame.rolls[1].pinsKnocked === 10
-        ) {
+      // Third roll of 10th frame
+      const firstRollPins = frame.rolls[0].pinsKnocked;
+      const secondRollPins = frame.rolls[1].pinsKnocked;
+
+      // If first roll was a strike
+      if (firstRollPins === 10) {
+        // If second roll was also a strike, any number is allowed
+        if (secondRollPins === 10) {
           return pinsToKnock <= 10;
         }
-
-        // If first roll was a strike but second wasn't,
-        // ensure the sum of second and third doesn't exceed 10
-        if (
-          frame.rolls[0].pinsKnocked === 10 &&
-          frame.rolls[1].pinsKnocked < 10
-        ) {
-          return frame.rolls[1].pinsKnocked + pinsToKnock <= 10;
-        }
-
-        // If it's a spare, any valid roll is allowed
-        if (frame.isSpare) {
-          return pinsToKnock <= 10;
-        }
+        // Otherwise, spare rules apply for second and third rolls
+        return pinsToKnock <= 10 - secondRollPins;
       }
 
-      // No third roll allowed otherwise
+      // If first roll wasn't a strike but first two made a spare
+      if (firstRollPins + secondRollPins === 10) {
+        return pinsToKnock <= 10;
+      }
+
+      // This shouldn't happen in a valid game state
       return false;
-    }
-  } else {
-    // Second roll in a regular frame
-    if (frame.rolls.length === 1) {
-      // Ensure the sum doesn't exceed 10
-      return frame.rolls[0].pinsKnocked + pinsToKnock <= 10;
     }
   }
 
-  return false;
+  return true;
 }
+
+// Additional helper functions with memoization for performance
+
+/**
+ * Format percentage for display
+ */
+const formatPercentageUncached = (
+  value: number,
+  decimals: number = 1
+): string => {
+  return `${value.toFixed(decimals)}%`;
+};
+
+// Memoized version of percentage formatting
+export const formatPercentage = memoize(
+  formatPercentageUncached,
+  (value, decimals) => `${value}-${decimals}`
+);
+
+/**
+ * Format average for display
+ */
+const formatAverageUncached = (value: number, decimals: number = 2): string => {
+  return value.toFixed(decimals);
+};
+
+// Memoized version of average formatting
+export const formatAverage = memoize(
+  formatAverageUncached,
+  (value, decimals) => `${value}-${decimals}`
+);
+
+/**
+ * Get ordinal suffix for numbers (1st, 2nd, 3rd, etc.)
+ */
+const getOrdinalSuffixUncached = (num: number): string => {
+  const j = num % 10;
+  const k = num % 100;
+
+  if (j === 1 && k !== 11) {
+    return `${num}st`;
+  }
+  if (j === 2 && k !== 12) {
+    return `${num}nd`;
+  }
+  if (j === 3 && k !== 13) {
+    return `${num}rd`;
+  }
+  return `${num}th`;
+};
+
+// Memoized version of ordinal suffix
+export const getOrdinalSuffix = memoize(getOrdinalSuffixUncached, (num) =>
+  num.toString()
+);
+
+/**
+ * Format date for display
+ */
+const formatDateUncached = (dateString: string): string => {
+  const date = new Date(dateString);
+  return date.toLocaleDateString();
+};
+
+// Memoized version of date formatting
+export const formatDate = memoize(formatDateUncached);
+
+/**
+ * Format time for display
+ */
+const formatTimeUncached = (dateString: string): string => {
+  const date = new Date(dateString);
+  return date.toLocaleTimeString();
+};
+
+// Memoized version of time formatting
+export const formatTime = memoize(formatTimeUncached);

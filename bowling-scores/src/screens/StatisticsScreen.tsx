@@ -3,7 +3,7 @@
  * Displays player and game statistics with charts and data visualizations
  */
 
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, Suspense } from 'react';
 import { View, StyleSheet, ScrollView, ActivityIndicator } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
@@ -36,6 +36,22 @@ type StatisticsScreenNavigationProp = NativeStackNavigationProp<
   RootStackParamList,
   'Statistics'
 >;
+
+// Chart loading fallback component
+const ChartLoadingFallback: React.FC = () => {
+  const { theme } = useTheme();
+  return (
+    <View style={styles.chartLoadingContainer}>
+      <ActivityIndicator size='small' color={theme.colors.primary.main} />
+      <Typography
+        variant='caption'
+        color={theme.colors.text.secondary}
+        style={styles.chartLoadingText}>
+        Loading chart...
+      </Typography>
+    </View>
+  );
+};
 
 const StatisticsScreen: React.FC = () => {
   const navigation = useNavigation<StatisticsScreenNavigationProp>();
@@ -133,7 +149,7 @@ const StatisticsScreen: React.FC = () => {
   // Render loading state
   if (isLoading) {
     return (
-      <Container>
+      <Container variant='screenCentered'>
         <View style={styles.loadingContainer}>
           <ActivityIndicator size='large' color={theme.colors.primary.main} />
           <Typography
@@ -154,16 +170,18 @@ const StatisticsScreen: React.FC = () => {
   const frameNumbers: FrameNumber[] = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10];
 
   return (
-    <Container>
-      <ScrollView>
+    <Container variant='screen'>
+      <ScrollView showsVerticalScrollIndicator={false}>
         <View style={styles.header}>
-          <Button
-            variant='text'
-            style={styles.backButton}
-            leftIcon='back'
-            onPress={() => navigation.navigate('Home')}>
-            Home
-          </Button>
+          <View style={styles.headerTop}>
+            <Button
+              variant='text'
+              style={styles.backButton}
+              leftIcon='back'
+              onPress={() => navigation.navigate('Home')}>
+              Home
+            </Button>
+          </View>
           <Typography variant='h1' style={styles.title}>
             Statistics
           </Typography>
@@ -181,13 +199,12 @@ const StatisticsScreen: React.FC = () => {
             <Typography
               variant='h3'
               color={theme.colors.text.secondary}
-              align='center'>
+              style={styles.emptyTitle}>
               No Game Data
             </Typography>
             <Typography
               variant='body1'
               color={theme.colors.text.secondary}
-              align='center'
               style={styles.emptyText}>
               Play some games to see your statistics
             </Typography>
@@ -203,7 +220,7 @@ const StatisticsScreen: React.FC = () => {
             {/* Player selection */}
             <Card style={styles.playerSelectionCard}>
               <View style={styles.playerSelectionHeader}>
-                <Typography variant='subtitle1' style={styles.sectionTitle}>
+                <Typography variant='h3' style={styles.sectionTitle}>
                   Select Player
                 </Typography>
 
@@ -239,9 +256,11 @@ const StatisticsScreen: React.FC = () => {
             {/* Player summary statistics */}
             {currentStats && (
               <>
-                <Typography variant='h2' style={styles.sectionHeader}>
-                  {getPlayerName(currentStats.playerId)}'s Statistics
-                </Typography>
+                <View style={styles.playerStatsHeader}>
+                  <Typography variant='h2' style={styles.sectionHeader}>
+                    {getPlayerName(currentStats.playerId)}'s Statistics
+                  </Typography>
+                </View>
 
                 <StatisticsSection
                   title='Performance Summary'
@@ -543,39 +562,43 @@ const StatisticsScreen: React.FC = () => {
                   )}
                 </StatisticsSection>
 
-                {/* Visual Charts Section */}
-                {currentStats.basic.gamesPlayed > 0 && (
-                  <>
-                    <StatisticsSection
-                      title='Score Trends'
-                      description='Visual representation of your scoring performance over time'>
+                {/* Player Score Trend Chart */}
+                {currentStats && games.length > 0 && (
+                  <Card style={styles.chartCard}>
+                    <Suspense fallback={<ChartLoadingFallback />}>
                       <ScoreTrendChart
                         games={games}
                         playerId={selectedPlayer!}
-                        title='Score Progression'
+                        title={`${getPlayerName(selectedPlayer!)} Score Trend`}
                       />
-                    </StatisticsSection>
+                    </Suspense>
+                  </Card>
+                )}
 
-                    <StatisticsSection
-                      title='Frame Performance Analysis'
-                      description='Strike and spare percentages by frame position'>
+                {/* Frame Performance Chart */}
+                {currentStats && (
+                  <Card style={styles.chartCard}>
+                    <Suspense fallback={<ChartLoadingFallback />}>
                       <FramePerformanceChart
                         framePerformance={currentStats.frames.framePerformance}
-                        title='Strike & Spare Rates by Frame'
+                        title='Frame Performance'
                         showStrikes={true}
                         showSpares={true}
                       />
-                    </StatisticsSection>
+                    </Suspense>
+                  </Card>
+                )}
 
-                    <StatisticsSection
-                      title='Pin Distribution'
-                      description='Distribution of pins knocked down per roll'>
+                {/* Pin Distribution Chart */}
+                {currentStats && (
+                  <Card style={styles.chartCard}>
+                    <Suspense fallback={<ChartLoadingFallback />}>
                       <PinDistributionChart
                         pinDistribution={currentStats.rolls.pinsDistribution}
-                        title='Pin Count Distribution'
+                        title='Pin Distribution'
                       />
-                    </StatisticsSection>
-                  </>
+                    </Suspense>
+                  </Card>
                 )}
               </>
             )}
@@ -598,86 +621,97 @@ const StatisticsScreen: React.FC = () => {
 
 const styles = StyleSheet.create({
   header: {
-    marginBottom: 16,
+    marginBottom: 24,
   },
   title: {
-    marginVertical: 8,
+    textAlign: 'center',
+    marginBottom: 0,
   },
   backButton: {
     alignSelf: 'flex-start',
     marginLeft: -8,
+    marginVertical: 0,
   },
   loadingContainer: {
-    flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
     padding: 24,
   },
   loadingText: {
     marginTop: 16,
+    textAlign: 'center',
   },
   emptyCard: {
-    padding: 24,
+    padding: 32,
     alignItems: 'center',
     justifyContent: 'center',
+    marginVertical: 0,
   },
   emptyIcon: {
     marginBottom: 16,
   },
+  emptyTitle: {
+    marginBottom: 16,
+    textAlign: 'center',
+  },
   emptyText: {
-    marginTop: 8,
+    textAlign: 'center',
     marginBottom: 24,
   },
   newGameButton: {
     minWidth: 200,
+    marginVertical: 0,
   },
   playerSelectionCard: {
     padding: 16,
-    marginBottom: 16,
+    marginBottom: 24,
+    marginVertical: 0,
   },
   playerSelectionHeader: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    marginBottom: 8,
+    marginBottom: 16,
   },
   refreshButton: {
     marginRight: -8,
+    marginVertical: 0,
   },
   sectionTitle: {
-    marginBottom: 4,
+    marginBottom: 0,
   },
   playerScroll: {
     flexGrow: 0,
-    marginBottom: 8,
   },
   playerButtonContainer: {
     flexDirection: 'row',
     paddingRight: 8,
+    gap: 12,
   },
   playerButton: {
-    marginRight: 8,
     minWidth: 100,
+    marginVertical: 0,
   },
   sectionHeader: {
-    marginTop: 8,
-    marginBottom: 16,
+    marginBottom: 0,
+    textAlign: 'center',
   },
   statGrid: {
     flexDirection: 'row',
     flexWrap: 'wrap',
-    marginHorizontal: -8,
+    gap: 12,
+    marginTop: 8,
   },
   statGridItem: {
-    width: '50%',
-    paddingHorizontal: 8,
-    marginBottom: 8,
+    width: '47%',
+    flexGrow: 1,
   },
   framePerformanceCard: {
     padding: 16,
     alignItems: 'center',
     justifyContent: 'center',
     minHeight: 100,
+    marginVertical: 0,
   },
   framePerformanceTitle: {
     marginTop: 16,
@@ -719,17 +753,63 @@ const styles = StyleSheet.create({
     color: '#4caf50',
   },
   rollStatsContainer: {
-    marginTop: 8,
+    marginTop: 24,
   },
   trendStatsContainer: {
-    marginTop: 16,
+    marginTop: 24,
   },
   actions: {
-    marginTop: 24,
-    marginBottom: 24,
+    marginTop: 32,
+    marginBottom: 16,
   },
   actionButton: {
     width: '100%',
+    marginVertical: 0,
+  },
+  chartCard: {
+    marginBottom: 16,
+    padding: 8,
+    marginVertical: 0,
+  },
+  framePerformanceList: {
+    marginTop: 12,
+  },
+  framePerformanceItem: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingVertical: 8,
+    borderBottomWidth: 1,
+    borderBottomColor: '#e0e0e0',
+  },
+  framePerformanceNumber: {
+    minWidth: 40,
+  },
+  framePerformanceStats: {
+    flex: 1,
+    flexDirection: 'row',
+    justifyContent: 'space-around',
+  },
+  lastItem: {
+    borderBottomWidth: 0,
+  },
+  chartLoadingContainer: {
+    height: 220,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginVertical: 16,
+  },
+  chartLoadingText: {
+    marginTop: 8,
+  },
+  headerTop: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 16,
+  },
+  playerStatsHeader: {
+    marginBottom: 16,
+    alignItems: 'center',
   },
 });
 

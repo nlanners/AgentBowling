@@ -17,6 +17,15 @@ export const spacing = {
   xl: baseUnit * 4, // 32px
   xxl: baseUnit * 6, // 48px
 
+  // Screen-level spacing for viewport separation
+  screenHorizontal: baseUnit * 2.5, // 20px - Better separation from edges
+  screenVertical: baseUnit * 2, // 16px - Vertical breathing room
+  safeAreaPadding: baseUnit * 3, // 24px - Extra padding for safe areas
+
+  // Component spacing for better element separation
+  componentGap: baseUnit * 2, // 16px - Standard gap between components
+  elementPadding: baseUnit * 1.5, // 12px - Internal padding for elements
+
   // Function to get custom spacing
   custom: (multiplier: number): number => baseUnit * multiplier,
 };

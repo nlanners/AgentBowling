@@ -28,37 +28,42 @@ export const createCommonStyles = () => {
     screenContainer: {
       flex: 1,
       backgroundColor: colors.background.default,
-      padding: spacing.md,
+      padding: spacing.screenHorizontal, // Better viewport separation
     },
     centeredContainer: {
       flex: 1,
       justifyContent: 'center',
       alignItems: 'center',
       backgroundColor: colors.background.default,
+      padding: spacing.screenHorizontal, // Ensure content doesn't touch edges
     },
     row: {
       flexDirection: 'row',
       alignItems: 'center',
+      gap: spacing.sm, // Add consistent gap between row items
     },
     spaceBetween: {
       flexDirection: 'row',
       alignItems: 'center',
       justifyContent: 'space-between',
+      paddingHorizontal: spacing.sm, // Add breathing room
     },
 
     // Card styles
     card: {
       backgroundColor: colors.background.paper,
       borderRadius: borderRadius.md,
-      padding: spacing.md,
-      marginVertical: spacing.sm,
+      padding: spacing.lg, // More generous internal padding
+      marginVertical: spacing.md, // Better vertical separation
+      marginHorizontal: spacing.xs, // Slight horizontal margin for breathing room
       ...shadows.sm,
     },
     elevatedCard: {
       backgroundColor: colors.background.paper,
       borderRadius: borderRadius.md,
-      padding: spacing.md,
-      marginVertical: spacing.sm,
+      padding: spacing.lg, // More generous internal padding
+      marginVertical: spacing.md, // Better vertical separation
+      marginHorizontal: spacing.xs, // Slight horizontal margin for breathing room
       ...shadows.md,
     },
 
@@ -66,22 +71,26 @@ export const createCommonStyles = () => {
     title: {
       ...typography.h1,
       color: colors.text.primary,
-      marginBottom: spacing.md,
+      marginBottom: spacing.lg, // Better breathing room for titles
+      marginTop: spacing.sm, // Slight top margin for separation
     },
     subtitle: {
       ...typography.h2,
       color: colors.text.primary,
-      marginBottom: spacing.sm,
+      marginBottom: spacing.md, // Increased spacing
+      marginTop: spacing.sm, // Slight top margin for separation
     },
     heading: {
       ...typography.h3,
       color: colors.text.primary,
-      marginBottom: spacing.sm,
+      marginBottom: spacing.md, // Increased spacing
+      marginTop: spacing.sm, // Slight top margin for separation
     },
     subheading: {
       ...typography.h4,
       color: colors.text.primary,
       marginBottom: spacing.sm,
+      marginTop: spacing.xs, // Slight top margin for separation
     },
     text: {
       ...typography.body1,
@@ -100,19 +109,23 @@ export const createCommonStyles = () => {
     primaryButton: {
       backgroundColor: colors.primary.main,
       borderRadius: borderRadius.md,
-      padding: spacing.md,
+      paddingVertical: spacing.elementPadding, // Better vertical padding
+      paddingHorizontal: spacing.lg, // More generous horizontal padding
       alignItems: 'center',
       justifyContent: 'center',
       marginVertical: spacing.sm,
+      minHeight: 48, // Ensure good touch target
       ...shadows.sm,
     },
     secondaryButton: {
       backgroundColor: colors.secondary.main,
       borderRadius: borderRadius.md,
-      padding: spacing.md,
+      paddingVertical: spacing.elementPadding, // Better vertical padding
+      paddingHorizontal: spacing.lg, // More generous horizontal padding
       alignItems: 'center',
       justifyContent: 'center',
       marginVertical: spacing.sm,
+      minHeight: 48, // Ensure good touch target
       ...shadows.sm,
     },
     outlineButton: {
@@ -120,15 +133,19 @@ export const createCommonStyles = () => {
       borderRadius: borderRadius.md,
       borderWidth: 1,
       borderColor: colors.primary.main,
-      padding: spacing.md,
+      paddingVertical: spacing.elementPadding, // Better vertical padding
+      paddingHorizontal: spacing.lg, // More generous horizontal padding
       alignItems: 'center',
       justifyContent: 'center',
       marginVertical: spacing.sm,
+      minHeight: 48, // Ensure good touch target
     },
     textButton: {
-      padding: spacing.sm,
+      paddingVertical: spacing.sm,
+      paddingHorizontal: spacing.md, // Better horizontal padding
       alignItems: 'center',
       justifyContent: 'center',
+      minHeight: 44, // Ensure good touch target
     },
     buttonText: {
       ...typography.button,
@@ -145,28 +162,35 @@ export const createCommonStyles = () => {
       borderWidth: 1,
       borderColor: colors.gray[300],
       borderRadius: borderRadius.sm,
-      padding: spacing.sm,
+      paddingVertical: spacing.elementPadding, // Better vertical padding
+      paddingHorizontal: spacing.md, // Better horizontal padding
       marginVertical: spacing.sm,
+      minHeight: 48, // Ensure good touch target
       ...typography.body1,
     },
     inputLabel: {
       ...typography.subtitle2,
       color: colors.text.primary,
-      marginBottom: spacing.xs,
+      marginBottom: spacing.sm, // More breathing room
+      marginTop: spacing.xs, // Slight top margin
     },
     inputError: {
       ...typography.caption,
       color: colors.error,
-      marginTop: spacing.xs,
+      marginTop: spacing.sm, // Better separation from input
+      marginLeft: spacing.xs, // Slight indentation
     },
 
     // List styles
     listItem: {
       flexDirection: 'row',
       alignItems: 'center',
-      padding: spacing.sm,
+      paddingVertical: spacing.md, // Better vertical padding
+      paddingHorizontal: spacing.md, // Better horizontal padding
+      marginHorizontal: spacing.xs, // Slight horizontal margin
       borderBottomWidth: 1,
       borderBottomColor: colors.gray[200],
+      minHeight: 56, // Better touch target
     },
     listItemText: {
       ...typography.body1,
@@ -177,18 +201,20 @@ export const createCommonStyles = () => {
     scoreCard: {
       backgroundColor: colors.background.paper,
       borderRadius: borderRadius.md,
-      padding: spacing.md,
-      marginVertical: spacing.sm,
+      padding: spacing.lg, // More generous padding
+      marginVertical: spacing.md, // Better vertical separation
+      marginHorizontal: spacing.xs, // Slight horizontal margin
       ...shadows.sm,
     },
     frameBox: {
       borderWidth: 1,
       borderColor: colors.gray[300],
-      padding: spacing.sm,
-      minWidth: 40,
-      minHeight: 40,
+      padding: spacing.md, // Better internal padding
+      minWidth: 48, // Larger touch targets
+      minHeight: 48, // Larger touch targets
       alignItems: 'center',
       justifyContent: 'center',
+      margin: spacing.xs, // Small margin between frames
     },
     strikeText: {
       ...typography.h4,

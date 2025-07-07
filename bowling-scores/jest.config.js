@@ -15,6 +15,11 @@ module.exports = {
     '<rootDir>/src/**/__tests__/**/*.{ts,tsx}',
     '<rootDir>/src/**/*.{spec,test}.{ts,tsx}',
   ],
+  // Test groups for different test types
+  testPathIgnorePatterns: [
+    '<rootDir>/node_modules/',
+    '<rootDir>/src/__tests__/integration/', // Integration tests run separately
+  ],
   collectCoverageFrom: [
     'src/**/*.{ts,tsx}',
     '!src/**/*.d.ts',

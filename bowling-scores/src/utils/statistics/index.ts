@@ -65,7 +65,8 @@ export const calculateGameStatistics = (game: Game): GameStatistics => {
   let openFrames = 0;
 
   game.players.forEach((player, index) => {
-    const frames = game.frames[index] || [];
+    // Handle undefined frames array gracefully
+    const frames = game.frames && game.frames[index] ? game.frames[index] : [];
     const score = game.scores?.[index] ?? 0;
 
     const strikes = frames.filter((frame) => frame.isStrike).length;
@@ -118,12 +119,26 @@ export const calculateGameStatistics = (game: Game): GameStatistics => {
 export const calculateAveragePinsPerRoll = (
   frames: Game['frames'][0]
 ): number => {
-  const totalRolls = frames.reduce((sum, frame) => sum + frame.rolls.length, 0);
-  const totalPins = frames.reduce(
-    (sum, frame) =>
-      sum + frame.rolls.reduce((s, roll) => s + roll.pinsKnocked, 0),
-    0
-  );
+  // Handle undefined/null frames array
+  if (!frames || frames.length === 0) {
+    return 0;
+  }
+
+  const totalRolls = frames.reduce((sum, frame) => {
+    // Handle undefined/null rolls array in frame
+    if (!frame || !frame.rolls) {
+      return sum;
+    }
+    return sum + frame.rolls.length;
+  }, 0);
+
+  const totalPins = frames.reduce((sum, frame) => {
+    // Handle undefined/null rolls array in frame
+    if (!frame || !frame.rolls) {
+      return sum;
+    }
+    return sum + frame.rolls.reduce((s, roll) => s + roll.pinsKnocked, 0);
+  }, 0);
 
   return totalRolls > 0 ? totalPins / totalRolls : 0;
 };

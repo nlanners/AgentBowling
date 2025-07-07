@@ -5,7 +5,6 @@ import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { RootStackParamList } from '../types';
 import { useTheme } from '../contexts/ThemeContext';
 import { useGame } from '../contexts/GameContext';
-import createCommonStyles from '../theme/styles';
 import Typography from '../components/ui/Typography';
 import Container from '../components/ui/Container';
 import Button from '../components/ui/Button';
@@ -19,7 +18,6 @@ const HomeScreen: React.FC = () => {
   const navigation = useNavigation<HomeScreenNavigationProp>();
   const { theme } = useTheme();
   const { resetGame } = useGame();
-  const commonStyles = createCommonStyles();
 
   const handleNewGame = () => {
     // Reset game state before navigating to player setup
@@ -28,40 +26,68 @@ const HomeScreen: React.FC = () => {
   };
 
   return (
-    <Container variant='centered'>
-      <Typography variant='h1'>Bowling Score Tracker</Typography>
+    <Container variant='screenCentered'>
+      <View style={styles.content}>
+        <View style={styles.titleContainer}>
+          <Typography variant='h1' style={styles.title}>
+            Bowling Score Tracker
+          </Typography>
+        </View>
 
-      <View style={styles.buttonContainer}>
-        <Button variant='primary' fullWidth onPress={handleNewGame}>
-          New Game
-        </Button>
+        <View style={styles.buttonContainer}>
+          <Button
+            variant='primary'
+            fullWidth
+            onPress={handleNewGame}
+            style={styles.button}>
+            New Game
+          </Button>
 
-        <Button
-          variant='secondary'
-          fullWidth
-          onPress={() => navigation.navigate('History')}>
-          View History
-        </Button>
+          <Button
+            variant='secondary'
+            fullWidth
+            onPress={() => navigation.navigate('History')}
+            style={styles.button}>
+            View History
+          </Button>
 
-        <Button
-          leftIcon='bar-chart'
-          variant='outline'
-          style={[styles.menuButton, { marginTop: 8 }]}
-          onPress={() => navigation.navigate('Statistics')}>
-          Statistics
-        </Button>
+          <Button
+            leftIcon='bar-chart'
+            variant='outline'
+            fullWidth
+            onPress={() => navigation.navigate('Statistics')}
+            style={styles.button}>
+            Statistics
+          </Button>
+        </View>
       </View>
     </Container>
   );
 };
 
 const styles = StyleSheet.create({
+  content: {
+    width: '100%',
+    maxWidth: 320,
+    alignItems: 'center',
+    paddingHorizontal: 20, // Ensure content doesn't touch edges
+  },
+  titleContainer: {
+    alignItems: 'center',
+    marginBottom: 56, // More breathing room
+    paddingHorizontal: 16, // Extra padding for title
+  },
+  title: {
+    textAlign: 'center',
+    marginBottom: 0,
+  },
   buttonContainer: {
     width: '100%',
-    maxWidth: 300,
+    gap: 20, // Better gap between buttons
+    paddingHorizontal: 8, // Ensure buttons don't touch edges
   },
-  menuButton: {
-    width: '100%',
+  button: {
+    marginVertical: 0,
   },
 });
 

@@ -4,6 +4,7 @@
  */
 
 import { MMKV } from 'react-native-mmkv';
+import { errorHandler, ErrorType, ErrorSeverity } from '../errorHandling';
 
 // Initialize the storage with a specific ID for the application
 export const storage = new MMKV({
@@ -26,13 +27,22 @@ export const STORAGE_KEYS = {
  * @returns The stored value or null if not found
  */
 export function getValue<T>(key: string): T | null {
-  const value = storage.getString(key);
-  if (!value) return null;
-
   try {
-    return JSON.parse(value) as T;
+    const value = storage.getString(key);
+    if (!value) return null;
+
+    try {
+      return JSON.parse(value) as T;
+    } catch (parseError) {
+      errorHandler.handleStorageError(
+        parseError as Error,
+        'getValue - JSON parse',
+        { key, valueLength: value.length }
+      );
+      return null;
+    }
   } catch (error) {
-    console.error(`Error parsing stored value for key ${key}:`, error);
+    errorHandler.handleStorageError(error as Error, 'getValue', { key });
     return null;
   }
 }
@@ -45,10 +55,14 @@ export function getValue<T>(key: string): T | null {
  */
 export function setValue<T>(key: string, value: T): boolean {
   try {
-    storage.set(key, JSON.stringify(value));
+    const serializedValue = JSON.stringify(value);
+    storage.set(key, serializedValue);
     return true;
   } catch (error) {
-    console.error(`Error storing value for key ${key}:`, error);
+    errorHandler.handleStorageError(error as Error, 'setValue', {
+      key,
+      valueType: typeof value,
+    });
     return false;
   }
 }
@@ -63,7 +77,7 @@ export function removeValue(key: string): boolean {
     storage.delete(key);
     return true;
   } catch (error) {
-    console.error(`Error removing value for key ${key}:`, error);
+    errorHandler.handleStorageError(error as Error, 'removeValue', { key });
     return false;
   }
 }
@@ -74,7 +88,12 @@ export function removeValue(key: string): boolean {
  * @returns True if the key exists
  */
 export function hasKey(key: string): boolean {
-  return storage.contains(key);
+  try {
+    return storage.contains(key);
+  } catch (error) {
+    errorHandler.handleStorageError(error as Error, 'hasKey', { key });
+    return false;
+  }
 }
 
 /**
@@ -85,6 +104,32 @@ export function clearAllData(): void {
   try {
     storage.clearAll();
   } catch (error) {
-    console.error('Error clearing all data:', error);
+    errorHandler.handleStorageError(error as Error, 'clearAllData', {});
+  }
+}
+
+/**
+ * Get storage size information
+ * @returns Object with storage statistics
+ */
+export function getStorageInfo(): { size: number; keys: string[] } | null {
+  try {
+    const keys = storage.getAllKeys();
+    let totalSize = 0;
+
+    keys.forEach((key) => {
+      const value = storage.getString(key);
+      if (value) {
+        totalSize += value.length;
+      }
+    });
+
+    return {
+      size: totalSize,
+      keys: keys,
+    };
+  } catch (error) {
+    errorHandler.handleStorageError(error as Error, 'getStorageInfo', {});
+    return null;
   }
 }

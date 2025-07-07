@@ -1,37 +1,81 @@
 import React from 'react';
 import { View, StyleSheet, ViewProps } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useTheme } from '../../contexts/ThemeContext';
-import createCommonStyles from '../../theme/styles';
 
 export interface ContainerProps extends ViewProps {
-  variant?: 'default' | 'centered';
+  variant?: 'default' | 'centered' | 'screen' | 'screenCentered';
   children: React.ReactNode;
+  disableSafeArea?: boolean;
 }
 
 const Container: React.FC<ContainerProps> = ({
   variant = 'default',
   style,
   children,
+  disableSafeArea = false,
   ...props
 }) => {
   const { theme } = useTheme();
-  const commonStyles = createCommonStyles();
+  const insets = useSafeAreaInsets();
 
   // Get container style based on variant
   const getContainerStyle = () => {
     switch (variant) {
       case 'centered':
-        return commonStyles.centeredContainer;
+        return [styles.container, styles.centered];
+      case 'screen':
+        return [styles.container, styles.screenPadding];
+      case 'screenCentered':
+        return [styles.container, styles.screenPadding, styles.centered];
       default:
-        return commonStyles.container;
+        return styles.container;
     }
   };
 
+  // Apply safe area insets for screen variants (unless disabled)
+  const getSafeAreaStyle = () => {
+    if (
+      disableSafeArea ||
+      (variant !== 'screen' && variant !== 'screenCentered')
+    ) {
+      return {};
+    }
+
+    return {
+      paddingTop: Math.max(insets.top, theme.spacing.screenVertical),
+      paddingBottom: Math.max(insets.bottom, theme.spacing.screenVertical),
+      paddingLeft: Math.max(insets.left, 0),
+      paddingRight: Math.max(insets.right, 0),
+    };
+  };
+
+  const containerStyle = [
+    getContainerStyle(),
+    { backgroundColor: theme.colors.background.default },
+    getSafeAreaStyle(),
+    style,
+  ];
+
   return (
-    <View style={[getContainerStyle(), style]} {...props}>
+    <View style={containerStyle} {...props}>
       {children}
     </View>
   );
 };
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+  },
+  centered: {
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  screenPadding: {
+    paddingHorizontal: 20, // Better separation from viewport edges
+    paddingVertical: 8, // Base vertical padding (safe area will add more)
+  },
+});
 
 export default Container;

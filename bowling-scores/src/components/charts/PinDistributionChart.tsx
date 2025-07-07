@@ -3,7 +3,7 @@
  * Displays a pie chart showing the distribution of pins knocked down
  */
 
-import React from 'react';
+import React, { useMemo } from 'react';
 import { View, StyleSheet, Dimensions } from 'react-native';
 import { PieChart } from 'react-native-chart-kit';
 import { useTheme } from '../../contexts/ThemeContext';
@@ -14,107 +14,125 @@ interface PinDistributionChartProps {
   title?: string;
 }
 
-const PinDistributionChart: React.FC<PinDistributionChartProps> = ({
-  pinDistribution,
-  title = 'Pin Distribution',
-}) => {
-  const { theme } = useTheme();
-  const screenWidth = Dimensions.get('window').width;
+const PinDistributionChart: React.FC<PinDistributionChartProps> = React.memo(
+  ({ pinDistribution, title = 'Pin Distribution' }) => {
+    const { theme } = useTheme();
+    const screenWidth = Dimensions.get('window').width;
 
-  // If no data, show empty state
-  if (
-    pinDistribution.length === 0 ||
-    pinDistribution.every((count) => count === 0)
-  ) {
-    return (
-      <View style={styles.emptyContainer}>
-        <Typography variant='body2' color={theme.colors.text.secondary}>
-          No pin distribution data available
-        </Typography>
-      </View>
-    );
-  }
+    // Memoize color generation
+    const colors = useMemo(() => {
+      const baseColors = [
+        theme.colors.primary.main,
+        theme.colors.secondary.main,
+        theme.colors.success,
+        theme.colors.warning,
+        theme.colors.error,
+        '#9C27B0', // Purple
+        '#FF5722', // Deep Orange
+        '#607D8B', // Blue Grey
+        '#795548', // Brown
+        '#E91E63', // Pink
+        '#00BCD4', // Cyan
+      ];
 
-  // Generate colors for each pin count
-  const generateColors = (count: number): string[] => {
-    const baseColors = [
+      return baseColors;
+    }, [
       theme.colors.primary.main,
       theme.colors.secondary.main,
       theme.colors.success,
       theme.colors.warning,
       theme.colors.error,
-      '#9C27B0', // Purple
-      '#FF5722', // Deep Orange
-      '#607D8B', // Blue Grey
-      '#795548', // Brown
-      '#E91E63', // Pink
-      '#00BCD4', // Cyan
-    ];
+    ]);
 
-    const colors: string[] = [];
-    for (let i = 0; i < count; i++) {
-      colors.push(baseColors[i % baseColors.length]);
+    // Memoize chart data preparation
+    const chartData = useMemo(() => {
+      if (
+        pinDistribution.length === 0 ||
+        pinDistribution.every((count) => count === 0)
+      ) {
+        return [];
+      }
+
+      return pinDistribution
+        .map((count, index) => ({
+          name: index === 10 ? 'Strike' : `${index} pins`,
+          population: count,
+          color: colors[index % colors.length],
+          legendFontColor: theme.colors.text.primary,
+          legendFontSize: 12,
+        }))
+        .filter((item) => item.population > 0);
+    }, [pinDistribution, colors, theme.colors.text.primary]);
+
+    // Memoize chart configuration
+    const chartConfig = useMemo(
+      () => ({
+        backgroundColor: theme.colors.background.paper,
+        backgroundGradientFrom: theme.colors.background.paper,
+        backgroundGradientTo: theme.colors.background.paper,
+        color: (opacity = 1) => theme.colors.text.primary,
+        labelColor: (opacity = 1) => theme.colors.text.secondary,
+        style: {
+          borderRadius: 16,
+        },
+      }),
+      [
+        theme.colors.background.paper,
+        theme.colors.text.primary,
+        theme.colors.text.secondary,
+      ]
+    );
+
+    // Early return for empty data
+    if (chartData.length === 0) {
+      return (
+        <View style={styles.emptyContainer}>
+          <Typography variant='body2' color={theme.colors.text.secondary}>
+            No pin distribution data available
+          </Typography>
+        </View>
+      );
     }
-    return colors;
-  };
 
-  // Prepare data for the chart (only include non-zero values)
-  const chartData = pinDistribution
-    .map((count, index) => ({
-      name: index === 10 ? 'Strike' : `${index} pins`,
-      population: count,
-      color: generateColors(11)[index],
-      legendFontColor: theme.colors.text.primary,
-      legendFontSize: 12,
-    }))
-    .filter((item) => item.population > 0);
+    return (
+      <View style={styles.container}>
+        <Typography variant='subtitle1' style={styles.title}>
+          {title}
+        </Typography>
 
-  const chartConfig = {
-    backgroundColor: theme.colors.background.paper,
-    backgroundGradientFrom: theme.colors.background.paper,
-    backgroundGradientTo: theme.colors.background.paper,
-    color: (opacity = 1) => theme.colors.text.primary,
-    labelColor: (opacity = 1) => theme.colors.text.secondary,
-    style: {
-      borderRadius: 16,
-    },
-  };
+        <PieChart
+          data={chartData}
+          width={screenWidth - 40}
+          height={220}
+          chartConfig={chartConfig}
+          accessor='population'
+          backgroundColor='transparent'
+          paddingLeft='15'
+          center={[10, 10]}
+          absolute={false} // Show percentages instead of absolute values
+          style={styles.chart}
+        />
 
-  return (
-    <View style={styles.container}>
-      <Typography variant='subtitle1' style={styles.title}>
-        {title}
-      </Typography>
-
-      <PieChart
-        data={chartData}
-        width={screenWidth - 40}
-        height={220}
-        chartConfig={chartConfig}
-        accessor='population'
-        backgroundColor='transparent'
-        paddingLeft='15'
-        center={[10, 10]}
-        absolute={false} // Show percentages instead of absolute values
-        style={styles.chart}
-      />
-
-      {/* Custom Legend */}
-      <View style={styles.legend}>
-        {chartData.map((item, index) => (
-          <View key={index} style={styles.legendItem}>
-            <View
-              style={[styles.legendColor, { backgroundColor: item.color }]}
-            />
-            <Typography variant='caption' style={styles.legendText}>
-              {item.name}: {item.population}
-            </Typography>
-          </View>
-        ))}
+        {/* Custom Legend */}
+        <View style={styles.legend}>
+          {chartData.map((item, index) => (
+            <View key={`${item.name}-${index}`} style={styles.legendItem}>
+              <View
+                style={[styles.legendColor, { backgroundColor: item.color }]}
+              />
+              <Typography variant='caption' style={styles.legendText}>
+                {item.name}: {item.population}
+              </Typography>
+            </View>
+          ))}
+        </View>
       </View>
-    </View>
-  );
-};
+    );
+  }
+);
+
+// Add display name for debugging
+PinDistributionChart.displayName = 'PinDistributionChart';
 
 const styles = StyleSheet.create({
   container: {

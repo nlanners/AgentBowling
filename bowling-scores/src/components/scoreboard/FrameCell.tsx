@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import { View, StyleSheet } from 'react-native';
 import { Frame } from '../../types';
 import { getFrameRollDisplay, getFrameColorCode } from '../../utils/scoring';
@@ -15,34 +15,78 @@ export interface FrameCellProps {
 /**
  * Component that displays a single bowling frame with rolls and score
  */
-const FrameCell: React.FC<FrameCellProps> = ({
-  frame,
-  frameIndex,
-  isCurrentFrame = false,
-  isComplete = false,
-}) => {
-  const { theme } = useTheme();
-  const isTenthFrame = frameIndex === 9;
+const FrameCell: React.FC<FrameCellProps> = React.memo(
+  ({ frame, frameIndex, isCurrentFrame = false, isComplete = false }) => {
+    const { theme } = useTheme();
 
-  // Get roll displays
-  const rollDisplays = getFrameRollDisplay(frame, frameIndex);
+    // Memoize expensive calculations
+    const isTenthFrame = useMemo(() => frameIndex === 9, [frameIndex]);
 
-  // Determine color based on frame result
-  const frameResult = getFrameColorCode(frame);
+    const rollDisplays = useMemo(
+      () => getFrameRollDisplay(frame, frameIndex),
+      [frame, frameIndex]
+    );
 
-  // Frame border color
-  const getBorderColor = () => {
-    if (isCurrentFrame) {
-      return theme.colors.primary.main;
-    }
-    return theme.colors.gray[300];
-  };
+    const frameResult = useMemo(() => getFrameColorCode(frame), [frame]);
 
-  const renderRolls = () => {
-    return (
-      <View style={styles.rollsContainer}>
-        {/* First roll cell */}
-        <View style={[styles.rollCell, styles.firstRollCell]}>
+    // Memoize border color calculation
+    const borderColor = useMemo(() => {
+      return isCurrentFrame
+        ? theme.colors.primary.main
+        : theme.colors.gray[300];
+    }, [isCurrentFrame, theme.colors.primary.main, theme.colors.gray]);
+
+    // Memoize background color calculation
+    const backgroundColor = useMemo(() => {
+      return isComplete
+        ? theme.colors.background.paper
+        : theme.colors.background.default;
+    }, [
+      isComplete,
+      theme.colors.background.paper,
+      theme.colors.background.default,
+    ]);
+
+    // Memoize score text color calculation
+    const scoreTextColor = useMemo(() => {
+      if (frame.isStrike) return theme.colors.success;
+      if (frame.isSpare) return theme.colors.accent.main;
+      return theme.colors.text.primary;
+    }, [
+      frame.isStrike,
+      frame.isSpare,
+      theme.colors.success,
+      theme.colors.accent.main,
+      theme.colors.text.primary,
+    ]);
+
+    // Memoize container styles
+    const containerStyles = useMemo(
+      () => [
+        styles.container,
+        isTenthFrame && styles.tenthFrame,
+        isCurrentFrame && styles.currentFrame,
+        {
+          borderColor,
+          backgroundColor,
+        },
+      ],
+      [isTenthFrame, isCurrentFrame, borderColor, backgroundColor]
+    );
+
+    // Memoize accessibility label
+    const accessibilityLabel = useMemo(
+      () => `Frame ${frameIndex + 1}${isCurrentFrame ? ', current frame' : ''}`,
+      [frameIndex, isCurrentFrame]
+    );
+
+    // Memoize roll cell content to avoid re-renders
+    const rollCells = useMemo(() => {
+      const cells = [];
+
+      // First roll cell
+      cells.push(
+        <View key='first-roll' style={[styles.rollCell, styles.firstRollCell]}>
           {frame.rolls.length > 0 && rollDisplays[0] === 'X' ? (
             <Badge variant='strike' size='small' />
           ) : (
@@ -51,9 +95,11 @@ const FrameCell: React.FC<FrameCellProps> = ({
             </Typography>
           )}
         </View>
+      );
 
-        {/* Second roll cell */}
-        <View style={styles.rollCell}>
+      // Second roll cell
+      cells.push(
+        <View key='second-roll' style={styles.rollCell}>
           {frame.rolls.length > 1 && rollDisplays[1] === '/' ? (
             <Badge variant='spare' size='small' />
           ) : frame.rolls.length > 1 && rollDisplays[1] === 'X' ? (
@@ -64,10 +110,12 @@ const FrameCell: React.FC<FrameCellProps> = ({
             </Typography>
           )}
         </View>
+      );
 
-        {/* Third roll cell (10th frame only) */}
-        {isTenthFrame && (
-          <View style={styles.rollCell}>
+      // Third roll cell (10th frame only)
+      if (isTenthFrame) {
+        cells.push(
+          <View key='third-roll' style={styles.rollCell}>
             {frame.rolls.length > 2 && rollDisplays[2] === 'X' ? (
               <Badge variant='strike' size='small' />
             ) : (
@@ -76,54 +124,37 @@ const FrameCell: React.FC<FrameCellProps> = ({
               </Typography>
             )}
           </View>
-        )}
+        );
+      }
+
+      return cells;
+    }, [frame.rolls, rollDisplays, isTenthFrame]);
+
+    return (
+      <View style={containerStyles} accessibilityLabel={accessibilityLabel}>
+        {/* Frame number */}
+        <View style={styles.frameNumber}>
+          <Typography variant='caption' color={theme.colors.text.secondary}>
+            {frameIndex + 1}
+          </Typography>
+        </View>
+
+        {/* Rolls */}
+        <View style={styles.rollsContainer}>{rollCells}</View>
+
+        {/* Score */}
+        <View style={styles.scoreContainer}>
+          <Typography variant='body2' color={scoreTextColor}>
+            {frame.cumulativeScore > 0 ? frame.cumulativeScore : ''}
+          </Typography>
+        </View>
       </View>
     );
-  };
+  }
+);
 
-  return (
-    <View
-      style={[
-        styles.container,
-        isTenthFrame && styles.tenthFrame,
-        isCurrentFrame && styles.currentFrame,
-        {
-          borderColor: getBorderColor(),
-          backgroundColor: isComplete
-            ? theme.colors.background.paper
-            : theme.colors.background.default,
-        },
-      ]}
-      accessibilityLabel={`Frame ${frameIndex + 1}${
-        isCurrentFrame ? ', current frame' : ''
-      }`}>
-      {/* Frame number */}
-      <View style={styles.frameNumber}>
-        <Typography variant='caption' color={theme.colors.text.secondary}>
-          {frameIndex + 1}
-        </Typography>
-      </View>
-
-      {/* Rolls */}
-      {renderRolls()}
-
-      {/* Score */}
-      <View style={styles.scoreContainer}>
-        <Typography
-          variant='body2'
-          color={
-            frame.isStrike
-              ? theme.colors.success
-              : frame.isSpare
-              ? theme.colors.accent.main
-              : theme.colors.text.primary
-          }>
-          {frame.cumulativeScore > 0 ? frame.cumulativeScore : ''}
-        </Typography>
-      </View>
-    </View>
-  );
-};
+// Add display name for debugging
+FrameCell.displayName = 'FrameCell';
 
 const styles = StyleSheet.create({
   container: {

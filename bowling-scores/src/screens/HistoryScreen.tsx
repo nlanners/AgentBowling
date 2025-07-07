@@ -293,15 +293,17 @@ const HistoryScreen: React.FC = () => {
   }, [activeFilters]);
 
   return (
-    <Container>
+    <Container variant='screen'>
       <View style={styles.header}>
-        <Button
-          variant='text'
-          style={styles.backButton}
-          leftIcon='back'
-          onPress={() => navigation.navigate('Home')}>
-          Home
-        </Button>
+        <View style={styles.headerTop}>
+          <Button
+            variant='text'
+            style={styles.backButton}
+            leftIcon='back'
+            onPress={() => navigation.navigate('Home')}>
+            Home
+          </Button>
+        </View>
         <Typography variant='h1' style={styles.title}>
           Game History
         </Typography>
@@ -347,78 +349,94 @@ const HistoryScreen: React.FC = () => {
           </Typography>
         </View>
       ) : filteredAndSortedGames.length === 0 ? (
-        <ScrollView contentContainerStyle={styles.emptyContainer}>
+        <ScrollView
+          contentContainerStyle={styles.emptyContainer}
+          showsVerticalScrollIndicator={false}>
           {showFilters && (
-            <FilterPanel
-              filters={filters}
-              onFiltersChange={handleFiltersChange}
-              players={allPlayers}
-              onApplyFilters={applyFilters}
-              onResetFilters={resetFilters}
-            />
+            <View style={styles.filterPanelContainer}>
+              <FilterPanel
+                filters={filters}
+                onFiltersChange={handleFiltersChange}
+                players={allPlayers}
+                onApplyFilters={applyFilters}
+                onResetFilters={resetFilters}
+              />
+            </View>
           )}
 
-          {hasActiveFilters ? (
-            <>
-              <Icon
-                name='filter'
-                size='large'
-                color={theme.colors.text.disabled}
-                style={styles.emptyIcon}
-              />
-              <Typography variant='h3' color={theme.colors.text.secondary}>
-                No Matching Games
-              </Typography>
-              <Typography
-                variant='body1'
-                color={theme.colors.text.secondary}
-                style={styles.emptyText}>
-                No games match your current filters
-              </Typography>
-              <Button
-                variant='primary'
-                style={styles.newGameButton}
-                onPress={resetFilters}>
-                Reset Filters
-              </Button>
-            </>
-          ) : (
-            <>
-              <Icon
-                name='history'
-                size='large'
-                color={theme.colors.text.disabled}
-                style={styles.emptyIcon}
-              />
-              <Typography variant='h3' color={theme.colors.text.secondary}>
-                No Game History
-              </Typography>
-              <Typography
-                variant='body1'
-                color={theme.colors.text.secondary}
-                style={styles.emptyText}>
-                Play some games to see your history
-              </Typography>
-              <Button
-                variant='primary'
-                style={styles.newGameButton}
-                onPress={() => navigation.navigate('PlayerSetup')}>
-                Start New Game
-              </Button>
-            </>
-          )}
+          <View style={styles.emptyContent}>
+            {hasActiveFilters ? (
+              <>
+                <Icon
+                  name='filter'
+                  size='large'
+                  color={theme.colors.text.disabled}
+                  style={styles.emptyIcon}
+                />
+                <Typography
+                  variant='h3'
+                  color={theme.colors.text.secondary}
+                  style={styles.emptyTitle}>
+                  No Matching Games
+                </Typography>
+                <Typography
+                  variant='body1'
+                  color={theme.colors.text.secondary}
+                  style={styles.emptyText}>
+                  No games match your current filters
+                </Typography>
+                <Button
+                  variant='primary'
+                  style={styles.actionButton}
+                  onPress={resetFilters}>
+                  Reset Filters
+                </Button>
+              </>
+            ) : (
+              <>
+                <Icon
+                  name='history'
+                  size='large'
+                  color={theme.colors.text.disabled}
+                  style={styles.emptyIcon}
+                />
+                <Typography
+                  variant='h3'
+                  color={theme.colors.text.secondary}
+                  style={styles.emptyTitle}>
+                  No Game History
+                </Typography>
+                <Typography
+                  variant='body1'
+                  color={theme.colors.text.secondary}
+                  style={styles.emptyText}>
+                  Play some games to see your history
+                </Typography>
+                <Button
+                  variant='primary'
+                  style={styles.actionButton}
+                  onPress={() => navigation.navigate('PlayerSetup')}>
+                  Start New Game
+                </Button>
+              </>
+            )}
+          </View>
         </ScrollView>
       ) : (
-        <ScrollView style={styles.scrollContainer}>
+        <ScrollView
+          style={styles.scrollContainer}
+          showsVerticalScrollIndicator={false}>
           {/* Filter panel */}
           {showFilters && (
-            <FilterPanel
-              filters={filters}
-              onFiltersChange={handleFiltersChange}
-              players={allPlayers}
-              onApplyFilters={applyFilters}
-              onResetFilters={resetFilters}
-            />
+            <View style={styles.filterPanelContainer}>
+              <FilterPanel
+                filters={filters}
+                onFiltersChange={handleFiltersChange}
+                players={allPlayers}
+                onApplyFilters={applyFilters}
+                onResetFilters={resetFilters}
+              />
+            </View>
           )}
 
           {/* Results summary */}
@@ -441,14 +459,16 @@ const HistoryScreen: React.FC = () => {
           )}
 
           {/* Game list */}
-          {filteredAndSortedGames.map((item) => (
-            <HistoryItem
-              key={item.id}
-              item={item}
-              onPress={handleGameSelect}
-              onDelete={handleDeletePress}
-            />
-          ))}
+          <View style={styles.gamesList}>
+            {filteredAndSortedGames.map((item) => (
+              <HistoryItem
+                key={item.id}
+                item={item}
+                onPress={handleGameSelect}
+                onDelete={handleDeletePress}
+              />
+            ))}
+          </View>
         </ScrollView>
       )}
 
@@ -479,24 +499,33 @@ const HistoryScreen: React.FC = () => {
 
 const styles = StyleSheet.create({
   header: {
-    marginBottom: 16,
+    marginBottom: 24,
   },
   title: {
-    marginVertical: 8,
+    textAlign: 'center',
+    marginBottom: 0,
   },
   backButton: {
     alignSelf: 'flex-start',
     marginLeft: -8,
+    marginVertical: 0,
+  },
+  headerTop: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 16,
   },
   actions: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    marginBottom: 16,
+    alignItems: 'center',
+    marginBottom: 24,
+    gap: 12,
   },
   filterButton: {
     flex: 1,
-    marginRight: 8,
     position: 'relative',
+    marginVertical: 0,
   },
   filterBadge: {
     position: 'absolute',
@@ -513,7 +542,7 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
   },
   clearButton: {
-    marginLeft: 8,
+    marginVertical: 0,
   },
   scrollContainer: {
     flex: 1,
@@ -522,11 +551,11 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    marginBottom: 12,
+    marginBottom: 16,
     paddingHorizontal: 4,
   },
   resetFilterButton: {
-    marginLeft: 8,
+    marginVertical: 0,
   },
   loadingContainer: {
     flex: 1,
@@ -536,24 +565,19 @@ const styles = StyleSheet.create({
   },
   emptyContainer: {
     flexGrow: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    padding: 24,
+    paddingBottom: 24,
   },
   emptyIcon: {
     marginBottom: 16,
   },
   emptyText: {
-    marginTop: 8,
     marginBottom: 24,
     textAlign: 'center',
-  },
-  newGameButton: {
-    minWidth: 200,
   },
   historyCard: {
     marginBottom: 12,
     overflow: 'hidden',
+    marginVertical: 0,
   },
   historyCardContent: {
     padding: 16,
@@ -562,13 +586,14 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    marginBottom: 8,
+    marginBottom: 12,
   },
   historyCardDate: {
     fontWeight: 'bold',
   },
   deleteButton: {
     marginRight: -8,
+    marginVertical: 0,
   },
   historyCardInfo: {
     marginTop: 8,
@@ -577,17 +602,18 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     marginBottom: 12,
+    gap: 8,
   },
   winnerName: {
     fontWeight: 'bold',
-    marginLeft: 8,
   },
   playersList: {
     marginTop: 8,
+    gap: 4,
   },
   playerRow: {
     flexDirection: 'row',
-    marginBottom: 4,
+    alignItems: 'center',
   },
   playerRank: {
     width: 24,
@@ -599,6 +625,27 @@ const styles = StyleSheet.create({
     width: 40,
     textAlign: 'right',
     fontWeight: 'bold',
+  },
+  filterPanelContainer: {
+    marginBottom: 24,
+  },
+  emptyContent: {
+    flexGrow: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: 24,
+  },
+  emptyTitle: {
+    marginBottom: 16,
+    textAlign: 'center',
+  },
+  actionButton: {
+    minWidth: 200,
+    marginVertical: 0,
+  },
+  gamesList: {
+    flex: 1,
+    gap: 8,
   },
 });
 

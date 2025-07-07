@@ -3,7 +3,7 @@
  * Displays a bar chart showing strike and spare percentages by frame
  */
 
-import React from 'react';
+import React, { useMemo } from 'react';
 import { View, StyleSheet, Dimensions } from 'react-native';
 import { BarChart } from 'react-native-chart-kit';
 import { useTheme } from '../../contexts/ThemeContext';
@@ -18,119 +18,165 @@ interface FramePerformanceChartProps {
   showSpares?: boolean;
 }
 
-const FramePerformanceChart: React.FC<FramePerformanceChartProps> = ({
-  framePerformance,
-  title = 'Frame Performance',
-  showStrikes = true,
-  showSpares = true,
-}) => {
-  const { theme } = useTheme();
-  const screenWidth = Dimensions.get('window').width;
+const FramePerformanceChart: React.FC<FramePerformanceChartProps> = React.memo(
+  ({
+    framePerformance,
+    title = 'Frame Performance',
+    showStrikes = true,
+    showSpares = true,
+  }) => {
+    const { theme } = useTheme();
+    const screenWidth = Dimensions.get('window').width;
 
-  // Convert Record to array for easier processing
-  const frameData = Object.entries(framePerformance).map(
-    ([frameNumber, performance]) => ({
-      frameNumber: parseInt(frameNumber) as FrameNumber,
-      ...performance,
-    })
-  );
+    // Memoize frame data processing
+    const frameData = useMemo(() => {
+      return Object.entries(framePerformance).map(
+        ([frameNumber, performance]) => ({
+          frameNumber: parseInt(frameNumber) as FrameNumber,
+          ...performance,
+        })
+      );
+    }, [framePerformance]);
 
-  // If no data, show empty state
-  if (frameData.length === 0) {
+    // Memoize chart data preparation
+    const chartData = useMemo(() => {
+      if (frameData.length === 0) return null;
+
+      const labels = frameData.map((frame) => `F${frame.frameNumber}`);
+      const datasets = [];
+
+      if (showStrikes) {
+        datasets.push({
+          data: frameData.map((frame) => frame.strikePercentage),
+          color: (opacity = 1) => theme.colors.success,
+        });
+      }
+
+      if (showSpares) {
+        datasets.push({
+          data: frameData.map((frame) => frame.sparePercentage),
+          color: (opacity = 1) => theme.colors.warning,
+        });
+      }
+
+      return {
+        labels,
+        datasets,
+      };
+    }, [
+      frameData,
+      showStrikes,
+      showSpares,
+      theme.colors.success,
+      theme.colors.warning,
+    ]);
+
+    // Memoize chart configuration
+    const chartConfig = useMemo(
+      () => ({
+        backgroundColor: theme.colors.background.paper,
+        backgroundGradientFrom: theme.colors.background.paper,
+        backgroundGradientTo: theme.colors.background.paper,
+        decimalPlaces: 0,
+        color: (opacity = 1) => theme.colors.text.primary,
+        labelColor: (opacity = 1) => theme.colors.text.secondary,
+        style: {
+          borderRadius: 16,
+        },
+        propsForBackgroundLines: {
+          strokeDasharray: '',
+          stroke: theme.colors.divider,
+          strokeWidth: 1,
+        },
+      }),
+      [
+        theme.colors.background.paper,
+        theme.colors.text.primary,
+        theme.colors.text.secondary,
+        theme.colors.divider,
+      ]
+    );
+
+    // Memoize legend items
+    const legendItems = useMemo(() => {
+      const items = [];
+
+      if (showStrikes) {
+        items.push({
+          key: 'strikes',
+          color: theme.colors.success,
+          label: 'Strikes',
+        });
+      }
+
+      if (showSpares) {
+        items.push({
+          key: 'spares',
+          color: theme.colors.warning,
+          label: 'Spares',
+        });
+      }
+
+      return items;
+    }, [showStrikes, showSpares, theme.colors.success, theme.colors.warning]);
+
+    // Early return for empty data
+    if (frameData.length === 0) {
+      return (
+        <View style={styles.emptyContainer}>
+          <Typography variant='body2' color={theme.colors.text.secondary}>
+            No frame performance data available
+          </Typography>
+        </View>
+      );
+    }
+
+    // chartData is null when frameData.length === 0, but we've already handled that case above
+    if (!chartData || chartData.datasets.length === 0) {
+      return (
+        <View style={styles.emptyContainer}>
+          <Typography variant='body2' color={theme.colors.text.secondary}>
+            No chart data available
+          </Typography>
+        </View>
+      );
+    }
+
     return (
-      <View style={styles.emptyContainer}>
-        <Typography variant='body2' color={theme.colors.text.secondary}>
-          No frame performance data available
+      <View style={styles.container}>
+        <Typography variant='subtitle1' style={styles.title}>
+          {title}
         </Typography>
+
+        {/* Legend */}
+        <View style={styles.legend}>
+          {legendItems.map((item) => (
+            <View key={item.key} style={styles.legendItem}>
+              <View
+                style={[styles.legendColor, { backgroundColor: item.color }]}
+              />
+              <Typography variant='caption'>{item.label}</Typography>
+            </View>
+          ))}
+        </View>
+
+        <BarChart
+          data={chartData}
+          width={screenWidth - 40}
+          height={220}
+          chartConfig={chartConfig}
+          style={styles.chart}
+          fromZero={true}
+          yAxisLabel=''
+          yAxisSuffix='%'
+        />
       </View>
     );
   }
+);
 
-  // Prepare data for the chart
-  const labels = frameData.map((frame) => `F${frame.frameNumber}`);
-  const datasets = [];
-
-  if (showStrikes) {
-    datasets.push({
-      data: frameData.map((frame) => frame.strikePercentage),
-      color: (opacity = 1) => theme.colors.success,
-    });
-  }
-
-  if (showSpares) {
-    datasets.push({
-      data: frameData.map((frame) => frame.sparePercentage),
-      color: (opacity = 1) => theme.colors.warning,
-    });
-  }
-
-  const chartData = {
-    labels,
-    datasets,
-  };
-
-  const chartConfig = {
-    backgroundColor: theme.colors.background.paper,
-    backgroundGradientFrom: theme.colors.background.paper,
-    backgroundGradientTo: theme.colors.background.paper,
-    decimalPlaces: 0,
-    color: (opacity = 1) => theme.colors.text.primary,
-    labelColor: (opacity = 1) => theme.colors.text.secondary,
-    style: {
-      borderRadius: 16,
-    },
-    propsForBackgroundLines: {
-      strokeDasharray: '',
-      stroke: theme.colors.divider,
-      strokeWidth: 1,
-    },
-  };
-
-  return (
-    <View style={styles.container}>
-      <Typography variant='subtitle1' style={styles.title}>
-        {title}
-      </Typography>
-
-      {/* Legend */}
-      <View style={styles.legend}>
-        {showStrikes && (
-          <View style={styles.legendItem}>
-            <View
-              style={[
-                styles.legendColor,
-                { backgroundColor: theme.colors.success },
-              ]}
-            />
-            <Typography variant='caption'>Strikes</Typography>
-          </View>
-        )}
-        {showSpares && (
-          <View style={styles.legendItem}>
-            <View
-              style={[
-                styles.legendColor,
-                { backgroundColor: theme.colors.warning },
-              ]}
-            />
-            <Typography variant='caption'>Spares</Typography>
-          </View>
-        )}
-      </View>
-
-      <BarChart
-        data={chartData}
-        width={screenWidth - 40}
-        height={220}
-        chartConfig={chartConfig}
-        style={styles.chart}
-        fromZero={true}
-        yAxisLabel=''
-        yAxisSuffix='%'
-      />
-    </View>
-  );
-};
+// Add display name for debugging
+FramePerformanceChart.displayName = 'FramePerformanceChart';
 
 const styles = StyleSheet.create({
   container: {
